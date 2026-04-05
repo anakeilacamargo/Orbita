@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Orbita">
+<meta name="theme-color" content="#0a0b0f">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.svg">
+<title>Orbita</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #08090d; --surface: #0f1117; --surface2: #161820;
+    --border: rgba(255,255,255,0.07); --border-hover: rgba(255,255,255,0.15);
+    --text: #f0ede8; --text-muted: #7a7880; --text-dim: #4a4850;
+    --gold: #c9a96e; --gold-dim: rgba(201,169,110,0.15); --gold-glow: rgba(201,169,110,0.08);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; font-weight: 300; min-height: 100vh; overflow-x: hidden; }
+  .stars { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+  .star { position: absolute; width: 1px; height: 1px; background: white; border-radius: 50%; animation: twinkle var(--d) ease-in-out infinite alternate; }
+  @keyframes twinkle { from { opacity: var(--min-o); } to { opacity: var(--max-o); } }
+  .orbit-bg { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 700px; height: 700px; border-radius: 50%; border: 1px solid rgba(201,169,110,0.04); pointer-events: none; z-index: 0; animation: spin 120s linear infinite; }
+  .orbit-bg::before { content: ''; position: absolute; inset: 60px; border-radius: 50%; border: 1px solid rgba(139,127,212,0.04); }
+  @keyframes spin { from { transform: translate(-50%,-50%) rotate(0deg); } to { transform: translate(-50%,-50%) rotate(360deg); } }
+  .container { position: relative; z-index: 1; max-width: 680px; margin: 0 auto; padding: 0 24px; }
+  header { padding: 48px 0 0; text-align: center; }
+  .logo-text { font-family: 'Playfair Display', serif; font-size: 28px; letter-spacing: 0.12em; color: var(--gold); }
+  .tagline { font-size: 13px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--text-muted); margin-top: 6px; margin-bottom: 0; }
+  .screen { display: none; }
+  .screen.active { display: block; }
+  #screen-input { padding: 40px 0 80px; }
+  .form-intro { text-align: center; margin-bottom: 40px; }
+  .form-intro h2 { font-family: 'Playfair Display', serif; font-size: 26px; font-weight: 400; margin-bottom: 10px; }
+  .form-intro p { font-size: 14px; color: var(--text-muted); line-height: 1.7; }
+  .form-group { margin-bottom: 20px; }
+  label { display: block; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; }
+  input, select { width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 300; color: var(--text); transition: border-color 0.2s; outline: none; -webkit-appearance: none; }
+  input::placeholder { color: var(--text-dim); }
+  input:focus, select:focus { border-color: var(--gold); }
+  select option { background: #1a1b22; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .api-note { background: var(--gold-glow); border: 1px solid rgba(201,169,110,0.15); border-radius: 10px; padding: 16px; font-size: 13px; color: var(--text-muted); margin-bottom: 16px; line-height: 1.75; }
+  .api-note strong { color: var(--gold); font-weight: 400; }
+  .api-note a { color: var(--gold); text-decoration: none; }
+  .btn-primary { width: 100%; background: linear-gradient(135deg, rgba(201,169,110,0.15), rgba(201,169,110,0.08)); border: 1px solid rgba(201,169,110,0.4); border-radius: 10px; padding: 16px; font-family: 'DM Sans', sans-serif; font-size: 14px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold); cursor: pointer; transition: all 0.25s; margin-top: 8px; }
+  .btn-primary:hover { background: linear-gradient(135deg, rgba(201,169,110,0.22), rgba(201,169,110,0.12)); border-color: rgba(201,169,110,0.7); }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+  .error-banner { background: rgba(224,92,92,0.08); border: 1px solid rgba(224,92,92,0.25); border-radius: 10px; padding: 14px 16px; font-size: 13px; color: #e07070; margin-top: 16px; display: none; line-height: 1.6; }
+  #screen-loading { padding: 80px 0; text-align: center; }
+  .loading-orbit { width: 120px; height: 120px; margin: 0 auto 32px; position: relative; }
+  .loading-orbit svg { animation: spin 4s linear infinite; width: 120px; height: 120px; }
+  .loading-dot { position: absolute; top: 50%; left: 50%; width: 8px; height: 8px; background: var(--gold); border-radius: 50%; transform: translate(-50%,-50%); animation: pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { opacity: 0.4; transform: translate(-50%,-50%) scale(0.8); } 50% { opacity: 1; transform: translate(-50%,-50%) scale(1.2); } }
+  .loading-text { font-size: 15px; color: var(--text-muted); font-style: italic; }
+  .loading-sub { font-size: 12px; color: var(--text-dim); margin-top: 8px; }
+  .loading-steps { margin-top: 28px; display: flex; flex-direction: column; gap: 10px; align-items: center; }
+  .loading-step { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--text-dim); transition: color 0.4s; }
+  .loading-step.done { color: var(--gold); }
+  .loading-step.active { color: var(--text-muted); }
+  .step-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+  #screen-results { padding: 32px 0 80px; }
+  .results-header { text-align: center; margin-bottom: 32px; }
+  .results-name { font-family: 'Playfair Display', serif; font-size: 24px; color: var(--gold); margin-bottom: 4px; }
+  .results-meta { font-size: 13px; color: var(--text-muted); margin-bottom: 16px; }
+  .chart-summary { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 20px; margin-bottom: 28px; display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; text-align: center; }
+  .chart-item-label { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 4px; }
+  .chart-item-value { font-size: 14px; color: var(--gold); }
+  .area-nav { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 2px; margin-bottom: 28px; scrollbar-width: none; }
+  .area-nav::-webkit-scrollbar { display: none; }
+  .area-tab { flex-shrink: 0; padding: 8px 16px; border-radius: 20px; border: 1px solid var(--border); background: transparent; color: var(--text-muted); font-family: 'DM Sans', sans-serif; font-size: 13px; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+  .area-tab:hover { border-color: var(--border-hover); color: var(--text); }
+  .area-tab.active { background: var(--gold-dim); border-color: rgba(201,169,110,0.4); color: var(--gold); }
+  .area-panel { display: none; }
+  .area-panel.active { display: block; animation: fadeUp 0.35s ease; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  .area-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; margin-bottom: 16px; }
+  .area-card-header { padding: 20px 24px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
+  .area-icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+  .area-title { font-family: 'Playfair Display', serif; font-size: 17px; font-weight: 400; color: var(--text); }
+  .area-placements { font-size: 12px; color: var(--text-dim); margin-top: 3px; }
+  .area-section { padding: 20px 24px; border-bottom: 1px solid var(--border); }
+  .section-label { font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 10px; }
+  .section-content { font-size: 15px; line-height: 1.75; font-weight: 300; }
+  .section-content.shadow { color: #c47a5a; }
+  .section-content.potential { color: #8fbf8a; }
+  .continuation-buttons { padding: 16px 24px 20px; display: flex; flex-direction: column; gap: 8px; }
+  .cont-btn { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; text-align: left; color: var(--text-muted); font-family: 'DM Sans', sans-serif; font-size: 14px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; }
+  .cont-btn:hover { border-color: var(--border-hover); color: var(--text); background: rgba(255,255,255,0.03); }
+  .cont-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .cont-btn-arrow { margin-left: auto; opacity: 0.4; font-size: 12px; }
+  .deep-panel { background: var(--surface2); border: 1px solid rgba(201,169,110,0.12); border-radius: 12px; padding: 20px 24px; margin: 0 24px 20px; font-size: 15px; line-height: 1.8; display: none; animation: fadeUp 0.3s ease; }
+  .deep-panel.visible { display: block; }
+  .deep-panel p { margin-bottom: 14px; }
+  .deep-panel p:last-child { margin-bottom: 0; }
+  .btn-secondary { display: block; margin: 32px auto 0; background: transparent; border: 1px solid var(--border); border-radius: 10px; padding: 12px 28px; font-family: 'DM Sans', sans-serif; font-size: 13px; letter-spacing: 0.1em; color: var(--text-muted); cursor: pointer; transition: all 0.2s; }
+  .btn-secondary:hover { border-color: var(--border-hover); color: var(--text); }
+  @media (max-width: 480px) { .form-row { grid-template-columns: 1fr; } .chart-summary { grid-template-columns: 1fr 1fr; } }
+</style>
+</head>
+<body>
+<div class="stars" id="stars"></div>
+<div class="orbit-bg"></div>
+<div class="container">
+  <header>
+    <div class="logo-text">ORBITA</div>
+    <div class="tagline">Know your orbit</div>
+  </header>
+
+  <div id="screen-input" class="screen active">
+    <div class="form-intro">
+      <h2>Map your chart</h2>
+      <p>Your birth data is the coordinate.<br>What we do with it is the real work.</p>
+    </div>
+    <div class="form-group">
+      <label>Your name</label>
+      <input type="text" id="name" placeholder="First name" autocomplete="off">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Birth date</label>
+        <input type="date" id="birth-date">
+      </div>
+      <div class="form-group">
+        <label>Birth time (optional)</label>
+        <input type="time" id="birth-time">
+      </div>
+    </div>
+    <div class="form-group" style="position:relative">
+      <label>Birth city</label>
+      <input type="text" id="birth-city" placeholder="e.g. São Paulo, Brasil" autocomplete="off" onkeyup="cityAutocomplete(this.value)">
+      <input type="hidden" id="birth-nation">
+      <input type="hidden" id="city-lat">
+      <input type="hidden" id="city-lng">
+      <div id="city-suggestions" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--border-hover);border-radius:10px;z-index:100;overflow:hidden;margin-top:4px;box-shadow:0 8px 24px rgba(0,0,0,0.4)"></div>
+    </div>
+    <div class="form-group">
+      <label>Language</label>
+      <select id="language">
+        <option value="en">English</option>
+        <option value="pt">Português</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>Gender</label>
+      <select id="gender">
+        <option value="female">Woman / Mulher</option>
+        <option value="male">Man / Homem</option>
+      </select>
+    </div>
+    <div class="api-note">
+      <strong>Two keys needed (both free to start):</strong><br><br>
+      1. <strong>RapidAPI key</strong> — get at <a href="https://rapidapi.com/gbattaglia/api/astrologer" target="_blank">rapidapi.com → search "Astrologer" by gbattaglia</a> → subscribe free → copy the X-RapidAPI-Key shown on the right side.<br><br>
+      2. <strong>Anthropic key</strong> — get at <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a> → API Keys → Create Key.
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>RapidAPI Key</label>
+        <input type="password" id="rapid-key" placeholder="Paste your RapidAPI key" autocomplete="off">
+      </div>
+      <div class="form-group">
+        <label>Anthropic Key</label>
+        <input type="password" id="api-key" placeholder="sk-ant-..." autocomplete="off">
+      </div>
+    </div>
+    <div class="error-banner" id="error-banner"></div>
+    <button class="btn-primary" id="btn-analyze" onclick="startAnalysis()">Read My Chart →</button>
+  </div>
+
+  <div id="screen-loading" class="screen">
+    <div class="loading-orbit">
+      <svg viewBox="0 0 120 120">
+        <circle cx="60" cy="60" r="50" stroke="#c9a96e" stroke-width="0.8" fill="none" stroke-dasharray="4 8" opacity="0.4"/>
+        <circle cx="60" cy="10" r="4" fill="#c9a96e" opacity="0.8"/>
+      </svg>
+      <div class="loading-dot"></div>
+    </div>
+    <div class="loading-text" id="loading-text">Starting...</div>
+    <div class="loading-sub">~20 seconds</div>
+    <div class="loading-steps">
+      <div class="loading-step" id="step-1"><div class="step-dot"></div>Locating birth city</div>
+      <div class="loading-step" id="step-2"><div class="step-dot"></div>Computing positions (Swiss Ephemeris)</div>
+      <div class="loading-step" id="step-3"><div class="step-dot"></div>Analyzing aspects & houses</div>
+      <div class="loading-step" id="step-4"><div class="step-dot"></div>Generating your reading</div>
+    </div>
+  </div>
+
+  <div id="screen-results" class="screen">
+    <div class="results-header">
+      <div class="results-name" id="results-name"></div>
+      <div class="results-meta" id="results-meta"></div>
+      <div class="chart-summary" id="chart-summary"></div>
+    </div>
+    <div class="area-nav" id="area-nav"></div>
+    <div id="area-panels"></div>
+    <button class="btn-secondary" onclick="resetToInput()">← New reading</button>
+  </div>
+</div>
+
+<script>
+const starsEl = document.getElementById('stars');
+for (let i = 0; i < 80; i++) {
+  const s = document.createElement('div');
+  s.className = 'star';
+  s.style.cssText = `left:${Math.random()*100}%;top:${Math.random()*100}%;--d:${2+Math.random()*5}s;--min-o:${0.05+Math.random()*0.1};--max-o:${0.2+Math.random()*0.5};animation-delay:${Math.random()*5}s;`;
+  starsEl.appendChild(s);
+}
+
+const AREAS = [
+  { id:'identity', label:'Identity', icon:'◎', color:'#c9a96e' },
+  { id:'love',     label:'Love',     icon:'♡', color:'#d47fa6' },
+  { id:'mind',     label:'Mind',     icon:'◇', color:'#8b7fd4' },
+  { id:'career',   label:'Career',   icon:'△', color:'#7fb5c9' },
+  { id:'wounds',   label:'Wounds',   icon:'◗', color:'#9ab87a' },
+  { id:'chart',    label:'Full Chart', icon:'✦', color:'#a89bd4' },
+];
+
+let currentData = null;
+let chartContext = null;
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + id).classList.add('active');
+}
+
+function setStep(n) {
+  for (let i=1; i<=4; i++) {
+    const el = document.getElementById('step-'+i);
+    el.className = 'loading-step' + (i < n ? ' done' : i === n ? ' active' : '');
+  }
+}
+
+function showError(msg) {
+  const el = document.getElementById('error-banner');
+  el.innerHTML = msg;
+  el.style.display = 'block';
+}
+
+function hideError() {
+  document.getElementById('error-banner').style.display = 'none';
+}
+
+async function getCoords(city, nation) {
+  // Use stored coords from autocomplete if available
+  const storedLat = document.getElementById('city-lat').value;
+  const storedLng = document.getElementById('city-lng').value;
+  if (storedLat && storedLng) {
+    return { lat: parseFloat(storedLat), lng: parseFloat(storedLng) };
+  }
+  // Fallback: geocode
+  const q = nation ? `${city}, ${nation}` : city;
+  const r = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1`, { headers:{'Accept-Language':'en'} });
+  const d = await r.json();
+  if (!d.length) throw new Error(`City not found: "${q}". Try a nearby larger city.`);
+  return { lat: parseFloat(d[0].lat), lng: parseFloat(d[0].lon) };
+}
+
+let autocompleteTimer = null;
+async function cityAutocomplete(val) {
+  const box = document.getElementById('city-suggestions');
+  // Clear stored coords when typing
+  document.getElementById('city-lat').value = '';
+  document.getElementById('city-lng').value = '';
+  document.getElementById('birth-nation').value = '';
+
+  if (val.length < 2) { box.style.display = 'none'; return; }
+  clearTimeout(autocompleteTimer);
+  autocompleteTimer = setTimeout(async () => {
+    try {
+      const r = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(val)}&format=json&limit=6&addressdetails=1&featuretype=city`, { headers:{'Accept-Language':'en'} });
+      const d = await r.json();
+      if (!d.length) { box.style.display = 'none'; return; }
+      // Deduplicate by city+country label
+      const seen = new Set();
+      const unique = d.filter(item => {
+        const city = item.address?.city || item.address?.town || item.address?.village || item.address?.county || item.name;
+        const country = item.address?.country || '';
+        const key = `${city}|${country}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+      box.innerHTML = unique.map((item, i) => {
+        const city = item.address?.city || item.address?.town || item.address?.village || item.address?.county || item.name;
+        const country = item.address?.country || '';
+        const cc = item.address?.country_code?.toUpperCase() || '';
+        const lat = item.lat;
+        const lng = item.lon;
+        const label = country ? `${city}, ${country}` : city;
+        return `<div onclick="selectCity('${city.replace(/'/g,"\'")}','${cc}','${lat}','${lng}','${label.replace(/'/g,"\'")}') "
+          style="padding:12px 16px;cursor:pointer;font-size:14px;color:var(--text);border-bottom:1px solid var(--border);transition:background 0.15s"
+          onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+          onmouseout="this.style.background='transparent'">
+          ${label}
+        </div>`;
+      }).join('');
+      box.style.display = 'block';
+    } catch { box.style.display = 'none'; }
+  }, 350);
+}
+
+function selectCity(city, cc, lat, lng, label) {
+  document.getElementById('birth-city').value = label;
+  document.getElementById('birth-nation').value = cc;
+  document.getElementById('city-lat').value = lat;
+  document.getElementById('city-lng').value = lng;
+  document.getElementById('city-suggestions').style.display = 'none';
+}
+
+// Close suggestions when clicking outside
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('#birth-city') && !e.target.closest('#city-suggestions')) {
+    document.getElementById('city-suggestions').style.display = 'none';
+  }
+});
+
+async function getTimezone(lat, lng) {
+  // Try multiple free timezone APIs
+  const apis = [
+    `https://timeapi.io/api/TimeZone/coordinate?latitude=${lat}&longitude=${lng}`,
+    `https://worldtimeapi.org/api/timezone/Etc/UTC`
+  ];
+  try {
+    const r = await fetch(`https://timeapi.io/api/TimeZone/coordinate?latitude=${lat}&longitude=${lng}`);
+    const d = await r.json();
+    if (d.timeZone && d.timeZone !== 'UTC') return d.timeZone;
+  } catch {}
+  // Fallback: use timezone-db via coordinates approximation
+  try {
+    const r = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`, { headers:{'Accept-Language':'en'} });
+    const d = await r.json();
+    const cc = d.address?.country_code?.toUpperCase();
+    // Common country -> timezone mappings
+    const map = {
+      'BR': 'America/Sao_Paulo', 'US': 'America/New_York', 'GB': 'Europe/London',
+      'DE': 'Europe/Berlin', 'FR': 'Europe/Paris', 'IT': 'Europe/Rome',
+      'ES': 'Europe/Madrid', 'PT': 'Europe/Lisbon', 'AR': 'America/Argentina/Buenos_Aires',
+      'MX': 'America/Mexico_City', 'CO': 'America/Bogota', 'CL': 'America/Santiago',
+      'PE': 'America/Lima', 'JP': 'Asia/Tokyo', 'CN': 'Asia/Shanghai',
+      'IN': 'Asia/Kolkata', 'AU': 'Australia/Sydney', 'CA': 'America/Toronto',
+      'ZA': 'Africa/Johannesburg', 'NG': 'Africa/Lagos', 'EG': 'Africa/Cairo',
+      'RU': 'Europe/Moscow', 'TR': 'Europe/Istanbul', 'SA': 'Asia/Riyadh',
+    };
+    if (map[cc]) return map[cc];
+  } catch {}
+  return 'UTC';
+}
+
+async function startAnalysis() {
+  hideError();
+  const name    = document.getElementById('name').value.trim();
+  const dateVal = document.getElementById('birth-date').value;
+  const timeVal = document.getElementById('birth-time').value;
+  const city    = document.getElementById('birth-city').value.trim();
+  const nation  = document.getElementById('birth-nation').value.trim().toUpperCase() || '';
+  const lang    = document.getElementById('language').value;
+  const gender  = document.getElementById('gender').value;
+  const rKey    = document.getElementById('rapid-key').value.trim();
+  const aKey    = document.getElementById('api-key').value.trim();
+
+  const missing = [];
+  if (!name) missing.push('Name');
+  if (!dateVal) missing.push('Birth date');
+  if (!city) missing.push('City');
+  if (!rKey) missing.push('RapidAPI Key');
+  if (!aKey) missing.push('Anthropic Key');
+  if (missing.length) { showError('Missing: <strong>' + missing.join(', ') + '</strong>'); return; }
+
+  document.getElementById('btn-analyze').disabled = true;
+  showScreen('loading');
+
+  try {
+    setStep(1);
+    document.getElementById('loading-text').textContent = 'Locating birth city...';
+
+    const [year, month, day] = dateVal.split('-').map(Number);
+    let hour = 12, minute = 0;
+    if (timeVal) { const [h,m] = timeVal.split(':').map(Number); hour=h; minute=m; }
+
+    setStep(2);
+    document.getElementById('loading-text').textContent = 'Computing positions via Swiss Ephemeris...';
+
+    // Get coordinates from Nominatim
+    const coords = await getCoords(city, nation);
+
+    // Get IANA timezone from coordinates using timeapi.io
+    let timezone = 'UTC';
+    try {
+      const tzResp = await fetch(`https://timeapi.io/api/TimeZone/coordinate?latitude=${coords.lat}&longitude=${coords.lng}`);
+      const tzData = await tzResp.json();
+      if (tzData.timeZone) timezone = tzData.timeZone;
+    } catch {}
+
+    console.log('Timezone resolved:', timezone, 'Coords:', coords);
+
+    const subject = {
+      name,
+      year, month, day, hour, minute,
+      city: city.split(',')[0].trim(),
+      nation: nation || 'US',
+      longitude: coords.lng,
+      latitude: coords.lat,
+      timezone
+    };
+
+    // Use chart/birth-chart to get SVG + data, then fetch context separately
+    const astroResp = await fetch('https://astrologer.p.rapidapi.com/api/v5/chart/birth-chart', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-RapidAPI-Host': 'astrologer.p.rapidapi.com',
+        'X-RapidAPI-Key': rKey
+      },
+      body: JSON.stringify({
+        subject,
+        theme: 'dark',
+        transparent_background: true,
+        active_points: ["Sun","Moon","Mercury","Venus","Mars","Jupiter","Saturn","Uranus","Neptune","Pluto","Chiron","True_Node","Ascendant","Medium_Coeli","Lilith"]
+      })
+    });
+
+    if (!astroResp.ok) {
+      const e = await astroResp.json().catch(()=>({}));
+      console.error('Astrologer API raw error:', JSON.stringify(e));
+      throw new Error(`Astrologer API: ${e.message || e.detail || JSON.stringify(e)}`);
+    }
+
+    const astroData = await astroResp.json();
+    if (astroData.status !== 'OK') throw new Error('Astrologer API error. Check your key and subscription.');
+
+    const chartRaw = astroData.chart_data || {};
+    const chartSVG = astroData.chart || null;
+
+    // Fetch AI context separately
+    const ctxResp = await fetch('https://astrologer.p.rapidapi.com/api/v5/context/birth-chart', {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json', 'X-RapidAPI-Host':'astrologer.p.rapidapi.com', 'X-RapidAPI-Key': rKey },
+      body: JSON.stringify({
+        subject,
+        active_points: ["Sun","Moon","Mercury","Venus","Mars","Jupiter","Saturn","Uranus","Neptune","Pluto","Chiron","True_Node","Ascendant","Medium_Coeli","Lilith"]
+      })
+    });
+    const ctxData = await ctxResp.json();
+    chartContext = ctxData.context || '';
+
+    setStep(3);
+    document.getElementById('loading-text').textContent = 'Analyzing your chart...';
+
+    const planets = chartRaw.planets || [];
+    const fp = (n) => planets.find(p => p.name?.toLowerCase() === n.toLowerCase());
+    const sun  = fp('Sun');
+    const moon = fp('Moon');
+    const houses = chartRaw.houses || [];
+    const asc = houses.find(h => h.number === 1);
+
+    const placements = {
+      sun:  sun  ? sun.sign  : '—',
+      moon: moon ? moon.sign : '—',
+      asc:  asc  ? asc.sign  : (timeVal ? '—' : 'No birth time'),
+    };
+
+    setStep(4);
+    document.getElementById('loading-text').textContent = 'Generating your reading...';
+
+    const sysPrompt = lang === 'pt' ? SYSTEM_PT : SYSTEM_EN;
+    const userMsg = lang === 'pt'
+      ? `Nome: ${name}\nGênero: ${gender === 'female' ? 'Mulher' : 'Homem'}\nData: ${dateVal}\nHora: ${timeVal||'desconhecida'}\nCidade: ${city}\nSol: ${placements.sun} | Lua: ${placements.moon} | Asc: ${placements.asc}\n\nDados completos do mapa (Swiss Ephemeris — inclui Lilith, distribuição de elementos, todos os aspectos):\n${chartContext ? chartContext : ''}\n\nRetorne APENAS o JSON.`
+      : `Name: ${name}\nGender: ${gender === 'female' ? 'Woman' : 'Man'}\nDate: ${dateVal}\nTime: ${timeVal||'unknown'}\nCity: ${city}\nSun: ${placements.sun} | Moon: ${placements.moon} | Asc: ${placements.asc}\n\nFull chart data (Swiss Ephemeris — includes Lilith, element distribution, all aspects):\n${chartContext ? chartContext : ''}\n\nReturn ONLY the JSON.`;
+
+    const cResp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': aKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:8000, system: sysPrompt, messages:[{ role:'user', content: userMsg }] })
+    });
+
+    if (!cResp.ok) {
+      const e = await cResp.json().catch(()=>({}));
+      throw new Error(`Anthropic API: ${e.error?.message || cResp.status}`);
+    }
+
+    const cData = await cResp.json();
+    const parsed = JSON.parse(cData.content[0].text.replace(/```json|```/g,'').trim());
+
+    currentData = parsed;
+    renderResults(name, dateVal, timeVal, city, placements, parsed, chartRaw, lang, chartSVG);
+    showScreen('results');
+
+  } catch(e) {
+    showScreen('input');
+    document.getElementById('btn-analyze').disabled = false;
+    showError('Error: ' + e.message);
+  }
+}
+
+function renderResults(name, date, time, city, placements, data, chartRaw, lang, chartSVG) {
+  document.getElementById('results-name').textContent = name;
+  const locale = lang === 'pt' ? 'pt-BR' : 'en-US';
+  const ds = new Date(date+'T12:00:00').toLocaleDateString(locale,{month:'long',day:'numeric',year:'numeric'});
+  let timeDisplay = '';
+  if (time) {
+    const [h, m] = time.split(':').map(Number);
+    if (lang === 'pt') {
+      timeDisplay = ` · ${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+    } else {
+      const ampm = h >= 12 ? 'PM' : 'AM';
+      const h12 = h % 12 || 12;
+      timeDisplay = ` · ${h12}:${String(m).padStart(2,'0')} ${ampm}`;
+    }
+  }
+  document.getElementById('results-meta').textContent = `${ds}${timeDisplay} · ${city}`;
+
+  document.getElementById('chart-summary').innerHTML = `
+    <div><div class="chart-item-label">Sun</div><div class="chart-item-value">${placements.sun}</div></div>
+    <div><div class="chart-item-label">Moon</div><div class="chart-item-value">${placements.moon}</div></div>
+    <div><div class="chart-item-label">Ascendant</div><div class="chart-item-value">${placements.asc}</div></div>
+  `;
+
+  // Build full chart tab (chartRaw comes from Astrologer API)
+  if (chartRaw) {
+    setTimeout(() => buildChartTab(chartRaw, chartSVG), 100);
+  }
+
+  const nav = document.getElementById('area-nav');
+  const panels = document.getElementById('area-panels');
+  nav.innerHTML = ''; panels.innerHTML = '';
+
+  AREAS.forEach((area, i) => {
+    const d = data[area.id]; if (!d) return;
+    const tabLabels = {
+      identity: lang==='pt' ? 'Identidade' : 'Identity',
+      love:     lang==='pt' ? 'Amor'       : 'Love',
+      mind:     lang==='pt' ? 'Mente'      : 'Mind',
+      career:   lang==='pt' ? 'Carreira'   : 'Career',
+      wounds:   lang==='pt' ? 'Feridas'    : 'Wounds',
+      chart:    lang==='pt' ? 'Mapa'       : 'Full Chart',
+    };
+    const tab = document.createElement('button');
+    tab.className = 'area-tab' + (i===0?' active':'');
+    tab.textContent = tabLabels[area.id] || area.label;
+    tab.dataset.area = area.id;
+    tab.onclick = () => switchArea(area.id);
+    nav.appendChild(tab);
+
+    const panel = document.createElement('div');
+    panel.className = 'area-panel' + (i===0?' active':'');
+    panel.id = 'panel-' + area.id;
+
+    if (area.id === 'chart') {
+      // Chart tab — will be populated by buildChartTab()
+      panel.innerHTML = '<div style="padding:20px;color:var(--text-muted);font-size:14px">Loading chart data...</div>';
+    } else {
+      const d = data[area.id];
+      if (!d) { panels.appendChild(panel); return; }
+      panel.innerHTML = `
+        <div class="area-card">
+          <div class="area-card-header">
+            <div class="area-icon" style="background:${area.color}18;color:${area.color}">${area.icon}</div>
+            <div>
+              <div class="area-title">${d.title||area.label}</div>
+              ${d.placements?`<div class="area-placements">${d.placements}</div>`:''}
+            </div>
+          </div>
+          <div class="area-section"><div class="section-label">${lang==='pt'?'Padrão':'Pattern'}</div><div class="section-content">${d.pattern||''}</div></div>
+          <div class="area-section"><div class="section-label">${lang==='pt'?'Sombra':'Shadow'}</div><div class="section-content shadow">${d.shadow||''}</div></div>
+          <div class="area-section"><div class="section-label">${lang==='pt'?'Potencial':'Potential'}</div><div class="section-content potential">${d.potential||''}</div></div>
+          ${d.tips && d.tips.length ? `<div class="area-section">
+            <div class="section-label">${lang==='pt'?'Na prática':'In practice'}</div>
+            <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px">
+              ${d.tips.map(tip => `<li style="display:flex;gap:10px;font-size:15px;line-height:1.65;font-weight:300;color:var(--text)"><span style="color:var(--gold);flex-shrink:0;margin-top:2px">→</span><span>${tip}</span></li>`).join('')}
+            </ul>
+          </div>` : ''}
+          <div class="continuation-buttons" id="cont-${area.id}">
+            ${(d.buttons||[]).map((btn,j)=>`<button class="cont-btn" onclick="deepDive('${area.id}',${j})">${btn}<span class="cont-btn-arrow">→</span></button>`).join('')}
+          </div>
+        </div>
+        <div class="deep-panel" id="deep-${area.id}"></div>
+      `;
+    }
+    panels.appendChild(panel);
+  });
+}
+
+function switchArea(id) {
+  document.querySelectorAll('.area-tab').forEach(t => t.classList.toggle('active', t.dataset.area===id));
+  document.querySelectorAll('.area-panel').forEach(p => p.classList.toggle('active', p.id==='panel-'+id));
+}
+
+function buildChartTab(chartRaw, chartSVG) {
+  const planets = chartRaw?.planets || [];
+  const houses  = chartRaw?.houses  || [];
+  const aspects  = chartRaw?.aspects  || [];
+  const lang = document.getElementById('language')?.value || 'en';
+  const isPT = lang === 'pt';
+
+  const SIGN_PT = {
+    'Aries':'Áries','Taurus':'Touro','Gemini':'Gêmeos','Cancer':'Câncer',
+    'Leo':'Leão','Virgo':'Virgem','Libra':'Libra','Scorpio':'Escorpião',
+    'Sagittarius':'Sagitário','Capricorn':'Capricórnio','Aquarius':'Aquário','Pisces':'Peixes'
+  };
+  const PLANET_PT = {
+    'Sun':'Sol','Moon':'Lua','Mercury':'Mercúrio','Venus':'Vênus','Mars':'Marte',
+    'Jupiter':'Júpiter','Saturn':'Saturno','Uranus':'Urano','Neptune':'Netuno',
+    'Pluto':'Plutão','Chiron':'Quíron','True_Node':'Nodo Norte','Mean_Node':'Nodo Norte',
+    'North_Node':'Nodo Norte','Ascendant':'Ascendente','Medium_Coeli':'Meio do Céu',
+    'Lilith':'Lilith'
+  };
+  const ASPECT_PT = {
+    'conjunction':'conjunção','opposition':'oposição','trine':'trígono','square':'quadratura',
+    'sextile':'sextil','quincunx':'quincúncio','semisextile':'semi-sextil',
+    'semisquare':'semi-quadratura','sesquisquare':'sesquiquadratura','sesquiquadrate':'sesquiquadratura',
+    'biquintile':'biquintil','quintile':'quintil'
+  };
+
+  function pName(n) { return isPT ? (PLANET_PT[n] || n) : n; }
+  function sName(s) { return isPT ? (SIGN_PT[s] || s) : s; }
+  function aName(a) { return isPT ? (ASPECT_PT[a?.toLowerCase()] || a) : a; }
+
+  function fmtDeg(absPos) {
+    if (absPos === undefined || absPos === null) return '';
+    const w = absPos % 30;
+    const d = Math.floor(w);
+    const m = Math.round((w - d) * 60);
+    return m > 0 ? `${d}°${String(m).padStart(2,'0')}'` : `${d}°`;
+  }
+
+  // Sort planets in traditional order
+  const ORDER = ['Sun','Moon','Mercury','Venus','Mars','Jupiter','Saturn','Uranus','Neptune','Pluto','Chiron','True_Node','Mean_Node','North_Node','Lilith','Ascendant','Medium_Coeli'];
+  const sorted = [...planets].sort((a,b) => {
+    const ai = ORDER.indexOf(a.name); const bi = ORDER.indexOf(b.name);
+    return (ai===-1?99:ai) - (bi===-1?99:bi);
+  });
+
+  // Distribution (elements/modalities)
+  const distributions = chartRaw?.first_subject_planets_distributions || chartRaw?.planets_distributions || null;
+
+  let html = '<div style="padding:0 0 40px">';
+
+  // Header
+  const asc = planets.find(p => p.name === 'Ascendant');
+  const mc  = planets.find(p => p.name === 'Medium_Coeli');
+  if (asc) {
+    html += `<div style="padding:20px 24px 8px;font-size:14px;color:var(--gold);font-weight:500">${isPT?'Ascendente':'Ascendant'} ${sName(asc.sign)} ${fmtDeg(asc.abs_pos)}</div>`;
+  }
+  if (mc) {
+    html += `<div style="padding:0 24px 16px;font-size:14px;color:var(--gold);font-weight:500">${isPT?'Meio do Céu':'Midheaven'} ${sName(mc.sign)} ${fmtDeg(mc.abs_pos)}</div>`;
+  }
+
+  // Each planet block
+  for (const p of sorted) {
+    if (p.name === 'Ascendant' || p.name === 'Medium_Coeli') continue;
+    const name = pName(p.name);
+    const sign = sName(p.sign);
+    const deg  = fmtDeg(p.abs_pos);
+    const house = p.house ? (isPT ? `Casa ${p.house}` : `House ${p.house}`) : '';
+    const retro = p.retrograde ? ' ℞' : '';
+
+    // Find aspects for this planet
+    const myAspects = aspects.filter(a =>
+      (a.p1_name === p.name || a.p2_name === p.name) &&
+      a.orbit !== undefined && Math.abs(a.orbit) <= 10
+    );
+
+    html += `<div style="padding:16px 24px 4px;border-top:1px solid var(--border)">`;
+    html += `<div style="font-size:15px;font-weight:500;color:var(--text);margin-bottom:4px">${name}${retro} ${isPT?'em':' in'} ${sign} ${deg}</div>`;
+    if (house) html += `<div style="font-size:13px;color:var(--text-muted);margin-bottom:8px">${name} ${isPT?'na':'in the'} ${house}</div>`;
+
+    for (const a of myAspects) {
+      const other = a.p1_name === p.name ? a.p2_name : a.p1_name;
+      const asp   = aName(a.aspect);
+      const orb   = Math.abs(a.orbit) < 1 ? (isPT?'exato':'exact') : `${isPT?'orbe':'orb'} ${Math.abs(a.orbit).toFixed(0)}°`;
+      const COLORS = {
+        conjunction:'#c9a96e', trine:'#8fbf8a', sextile:'#7fb5c9',
+        opposition:'#e07070', square:'#e07070', quincunx:'#a89bd4',
+        sesquisquare:'#e09060', sesquiquadrate:'#e09060', semisquare:'#e09060',
+        semisextile:'#a89bd4', biquintile:'#8b7fd4', quintile:'#8b7fd4'
+      };
+      const col = COLORS[a.aspect?.toLowerCase()] || 'var(--text-muted)';
+      html += `<div style="font-size:13px;color:var(--text-dim);padding:2px 0">${name} <span style="color:${col}">${asp}</span> ${pName(other)} <span style="color:var(--text-dim);font-size:12px">${orb}</span></div>`;
+    }
+    html += '</div>';
+  }
+
+  // Element/modality distribution
+  if (distributions) {
+    const elems = distributions.element || distributions.elements;
+    const modes = distributions.modality || distributions.modalities;
+    if (elems || modes) {
+      html += `<div style="padding:20px 24px;border-top:1px solid var(--border);margin-top:8px">`;
+      html += `<div style="font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-dim);margin-bottom:12px">${isPT?'Distribuição':'Distribution'}</div>`;
+      if (elems) {
+        for (const [k,v] of Object.entries(elems)) {
+          if (v === 0) continue;
+          const ELEM_PT = {Fire:'Fogo',Earth:'Terra',Air:'Ar',Water:'Água'};
+          const label = isPT ? (ELEM_PT[k]||k) : k;
+          const bar = '█'.repeat(Math.min(v,10));
+          html += `<div style="font-size:13px;color:var(--text-muted);margin-bottom:6px">${label} <span style="color:var(--gold)">${bar}</span> ${v}</div>`;
+        }
+      }
+      html += '</div>';
+    }
+  }
+
+  html += '</div>';
+
+  const chartPanel = document.getElementById('panel-chart');
+  if (chartPanel) chartPanel.innerHTML = `<div class="area-card">${html}</div>`;
+}
+
+
+async function deepDive(areaId, btnIdx) {
+  const lang = document.getElementById('language').value;
+  const aKey = document.getElementById('api-key').value.trim();
+  const d = currentData[areaId];
+  const deepEl = document.getElementById('deep-'+areaId);
+  deepEl.classList.add('visible');
+  deepEl.innerHTML = `<p style="color:var(--text-muted);font-style:italic;font-size:14px">${lang==='pt'?'Aprofundando...':'Going deeper...'}</p>`;
+  document.querySelectorAll(`#cont-${areaId} .cont-btn`).forEach(b => b.disabled=true);
+
+  const sys = lang==='pt'
+    ? `Você é Orbita. Tem acesso ao mapa astral completo via Swiss Ephemeris. Responda em 3-5 parágrafos. Direto, presente, sem condicionais.`
+    : `You are Orbita. You have the full birth chart via Swiss Ephemeris. Respond in 3-5 paragraphs. Direct, present tense, no conditionals.`;
+
+  const msg = `Chart:\n${chartContext ? chartContext.substring(0,3000) : ''}\n\nArea: ${areaId}\nPattern: ${d.pattern}\nShadow: ${d.shadow}\nPotential: ${d.potential}\n\nQuestion: ${d.buttons[btnIdx]}`;
+
+  try {
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':aKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body: JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:900, system:sys, messages:[{role:'user',content:msg}] })
+    });
+    const data = await r.json();
+    deepEl.innerHTML = data.content[0].text.split('\n\n').filter(p=>p.trim()).map(p=>`<p>${p}</p>`).join('');
+  } catch(e) {
+    deepEl.innerHTML = `<p style="color:#e07070">Error: ${e.message}</p>`;
+  }
+  document.querySelectorAll(`#cont-${areaId} .cont-btn`).forEach(b => b.disabled=false);
+}
+
+function resetToInput() {
+  showScreen('input');
+  document.getElementById('btn-analyze').disabled = false;
+}
+
+const SYSTEM_EN = `You are Orbita — a personal development tool that uses astrology as its analysis system. You receive precise birth chart data from Swiss Ephemeris.
+
+WHAT YOU ARE NOT: A horoscope app. No "energy", "the universe", "your journey", "integration", "the cosmos". No hedging. No inspiration. You analyze.
+
+WHAT YOU ARE: A tool that tells people who they actually are — directly, specifically, using their real planetary positions. Target reaction: "holy shit, that's accurate."
+
+ANALOGY RULES — this is critical:
+- One image, one situation, immediately understood on first read
+- Everyday situations people recognize instantly
+- Creative and specific, but not layered or complex
+- GOOD: "You're the type who arrives at a party, reads the room in 10 minutes, and leaves without having said anything real about yourself."
+- GOOD: "You think out loud, but what you actually process stays hidden until you're ready."
+- BAD: "You're a translator living in an observation tower whose equipment is in a hidden basement while your face smiles at the world." (too many layers)
+- BAD: continuing the metaphor after the opening — "emerges with unique treasures", "the architect finishes the blueprint" etc. ONE metaphor, then DROP IT.
+- The analogy is ONE sentence or two MAX. After that: direct, plain language only.
+- The analogy should make the person think "how did you know that" — not "wait, let me re-read that"
+- After the analogy: no more poetic language. Every sentence is a direct statement of fact about this person."
+
+CUSP RULE — important:
+- When a planet is within 2° of the next house cusp, note it: "Sun at 0°03' Gemini — on the cusp of the 12th house. Both houses apply."
+- When analyzing the chart, treat near-cusp planets as operating in BOTH houses
+- Never analyze planets in isolation — always consider how they interact with other placements. Example: if Sun is in 11th but Mercury is already in 12th, the 12th house territory is covered — Sun in 11th complements rather than duplicates.
+
+WRITING STRUCTURE — follow exactly:
+
+1. OPENING ANALOGY (1 paragraph): One clear, creative, immediately-understood image of this person. One situation. Not layered.
+
+2. CORE STRUCTURE (planet by planet): Name each key placement with exact aspect and orb. Direct behavioral consequence. "Aries Rising + Pluto trine exact = you don't enter a room, you arrive. Involuntary. People feel it before you speak."
+
+3. CENTRAL TENSION: The most important aspect in this area and what it creates behaviorally — not symbolically.
+
+4. BEHAVIORAL PATTERN: 2-3 modes this person operates in. What looks contradictory but is actually the same system.
+
+5. ONE-LINE CLOSER: Single sentence. Punchy. True. Slightly uncomfortable.
+
+RULES:
+- The person's gender is provided — use correct pronouns throughout. For women: she/her/herself. For men: he/him/himself. Never use "they" or gender-neutral language. Every sentence must use the correct gendered pronoun.
+- Always North Node, never South Node
+- Include Lilith if present in the chart data — it adds crucial information especially for women
+- Include element distribution analysis (Fire/Earth/Air/Water excess or blockage) — this is often the most practically useful insight
+- Mention retrograde planets and their behavioral consequence
+- Name actual degrees when relevant
+- Present tense, no conditionals
+- Name stelliums as stelliums
+- Mention retrograde planets
+- Don't repeat info across areas — each area reveals something new
+- Analyze the chart as a SYSTEM, not isolated planets
+
+Return ONLY valid JSON. No markdown. No preamble.
+
+{"identity":{"title":"Identity & Purpose","placements":"Key placements: Sun sign+house+degree, Moon, Rising, major aspects with orbs","pattern":"Full 5-part analysis. 8-15 sentences. Analogy first, then planet by planet, then tension, then pattern, then closer.","shadow":"2-3 sentences. The specific behavioral trap this configuration creates.","potential":"2-3 sentences. What this person is capable of when the configuration works — specific, not inspirational.","tips":["3-5 concrete, specific actions based on this chart. Not generic advice. Examples: 'Stop scheduling important decisions for mornings — your mind needs time to warm up.' / 'Your best work happens alone. Protect that time like it's non-negotiable.' / 'When you feel the urge to over-explain yourself, that's Saturn talking. Say less."],"buttons":["A question this specific person would genuinely want answered","A question about how others perceive them vs how they see themselves","A question about the tension between two specific placements"]},"love":{"title":"Relationships & Love","placements":"Venus sign+house, Descendant sign, 7th house ruler, key love aspects with orbs","pattern":"Full 5-part analysis: how this person loves, what they need, what they sabotage, what their ideal dynamic looks like.","shadow":"The specific way this configuration creates relationship problems.","potential":"What relationships look like at their best for this person.","tips":["3-5 concrete actions for relationships based on this chart. Examples: 'Wait 48h before ending anything — your Moon changes its mind.' / 'You need a partner who can handle silence. Stop apologizing for it.' / 'The moment you start shrinking yourself in a relationship, leave.'"],"buttons":["Question about their relationship pattern","Question about what they actually need vs what they think they want","Question about their ideal partner"]},"mind":{"title":"Mind & Communication","placements":"Mercury sign+house, 3rd house ruler, key mental aspects","pattern":"Full 5-part analysis of how this person thinks, processes, communicates.","shadow":"The specific cognitive or communication trap.","potential":"What this mind is capable of at its best.","tips":["3-5 concrete actions for how to work with this mind. Examples: 'Your best ideas come when no one is watching. Build that solitude into your routine.' / 'Stop explaining your thought process mid-conversation — finish the thought first.' / 'Write before you speak. It clarifies what you actually think.'"],"buttons":["Question about how they learn","Question about their communication blind spot","Question about what environment suits their mind"]},"career":{"title":"Career & Mission","placements":"MC sign+degree, Saturn sign+house, 10th house ruler, key career aspects","pattern":"Full 5-part analysis of what this person is built for and why.","shadow":"The specific career self-sabotage pattern.","potential":"What professional success actually looks like for this configuration.","tips":["3-5 concrete career actions based on this chart. Examples: 'You need real autonomy, not flexibility — they are different things. Negotiate for it.' / 'Stop taking on roles where you manage up. You are built to lead, not to manage expectations.' / 'Your authority is most visible when you stop trying to be liked.'"],"buttons":["Question about their natural authority","Question about their career block","Question about what success feels like for them"]},"wounds":{"title":"Wounds & Healing","placements":"Chiron sign+house+degree, North Node sign+house+degree — ALWAYS NORTH NODE","pattern":"Full 5-part analysis of the core wound and growth direction.","shadow":"How the wound shows up behaviorally when unexamined.","potential":"What becomes possible when integrated — specific to this chart.","tips":["3-5 concrete actions for healing based on this chart. Practical, not therapeutic jargon. Examples: 'The next time you shrink yourself to make someone comfortable, notice it in real time. That is the wound activating.' / 'Your growth direction is Aries — act before you are ready. Pick one thing this week.'"],"buttons":["Question about the origin of the wound","Question about the specific healing path","Question about the gift hidden in the wound"]}}`;
+
+const SYSTEM_PT = `Você é Orbita — uma ferramenta de desenvolvimento pessoal que usa astrologia como sistema de análise. Recebe dados precisos do mapa via Swiss Ephemeris.
+
+O QUE VOCÊ NÃO É: App de horóscopo. Sem "energia", "o universo", "sua jornada", "integração", "o cosmos". Sem condicionais. Sem inspiração. Você analisa.
+
+O QUE VOCÊ É: Uma ferramenta que diz às pessoas quem elas realmente são — direto, específico, com as posições reais. Reação alvo: "caralho, faz sentido."
+
+REGRAS DE ANALOGIA — crítico:
+- Uma imagem, uma situação, entendida imediatamente na primeira leitura
+- Situações cotidianas que qualquer pessoa reconhece
+- Criativa e específica, mas não em camadas
+- BOM: "Você é do tipo que chega numa festa, lê a sala em 10 minutos, e vai embora sem ter contado nada sobre si mesma."
+- BOM: "Você pensa em voz alta, mas o que realmente processa fica escondido até estar pronta."
+- RUIM: "Você é uma tradutora que vive numa torre de observação cujo equipamento fica num porão enquanto seu rosto sorri pro mundo." (camadas demais)
+- RUIM: continuar a metáfora depois da abertura — "emerge com tesouros únicos", "a arquiteta termina o projeto" etc. UMA metáfora, depois ABANDONA.
+- A analogia é UMA frase ou duas NO MÁXIMO. Depois disso: linguagem direta e simples.
+- A analogia deve fazer a pessoa pensar "como você sabia" — não "espera, vou reler"
+- Depois da analogia: sem mais linguagem poética. Cada frase é uma afirmação direta sobre essa pessoa.
+- PADRÃO DE LINGUAGEM: Direto mas humano. Como um amigo brilhante que fala a verdade sem ser frio. Acessível, gramaticalmente correto, sem gírias, sem jargões, sem expressões traduzidas do inglês. Use "em que" e "no qual/na qual/nos quais/nas quais" em vez de "onde" para referir a tempo ou situação.
+- REFERÊNCIA DE ESTILO — princípios de Machado de Assis adaptados com calor humano: (1) Brevidade com peso — diga e pare. (2) Confiança no leitor — não explique demais. (3) Descreva comportamento, não rótulos. Não "você tem medo de abandono" mas "você vai embora antes que possam ir." (4) Seco mas nunca frio — há diferença entre direto e duro.
+- EXPRESSÕES PROIBIDAS: bandeira vermelha, gatilho, tóxico, resposta traumática, trabalho de sombra, criança interior, vibração, manifestar, energia do universo, jornada de autoconhecimento, narrativa, ou qualquer expressão que pareça saída de um Instagram de autoajuda. Também proibido: traduções literais do inglês como "bandeira vermelha" (red flag), "espaço seguro" (safe space), "trauma de abandono" como substantivo isolado."
+
+REGRA DE CÚSPIDE — importante:
+- Quando um planeta está a menos de 2° da cúspide da próxima casa, note: "Sol em 0°03' Gêmeos — na cúspide da Casa 12. As duas casas se aplicam."
+- Trate planetas próximos à cúspide como operando nas DUAS casas
+- Nunca analise planetas isolados — considere como interagem com outros posicionamentos. Exemplo: se o Sol está na 11 mas Mercúrio já está na 12, o território da 12 já está coberto — Sol na 11 complementa em vez de duplicar.
+
+ESTRUTURA DE ESCRITA — siga exatamente:
+
+1. ANALOGIA DE ABERTURA (1 parágrafo): Uma imagem clara, criativa, imediatamente compreendida. Uma situação. Sem camadas.
+
+2. ESTRUTURA CENTRAL (planeta por planeta): Nomeie cada posição chave com aspecto exato e orb. Consequência comportamental direta. "Ascendente Áries + Plutão trígono exato = você não entra numa sala, você chega. Involuntário. As pessoas sentem antes de você falar."
+
+3. TENSÃO CENTRAL: O aspecto mais importante nessa área e o que cria comportamentalmente — não simbolicamente.
+
+4. PADRÃO COMPORTAMENTAL: 2-3 modos que essa pessoa opera. O que parece contraditório mas é o mesmo sistema.
+
+5. FECHAMENTO EM UMA FRASE: Uma frase. Direta. Verdadeira. Levemente desconfortável.
+
+REGRAS:
+- O gênero da pessoa é fornecido — use concordância gramatical correta em português. Para mulheres: ela, dela, si mesma, a ela, sozinha, determinada, ansiosa, etc. Para homens: ele, dele, si mesmo, a ele, sozinho, determinado, ansioso, etc. NUNCA use linguagem neutra ou genérica. Toda frase deve ter concordância de gênero correta.
+- Sempre Nodo Norte, nunca Nodo Sul
+- Inclua Lilith se presente nos dados do mapa — acrescenta informação crucial especialmente para mulheres
+- Inclua análise da distribuição de elementos (excesso ou bloqueio de Fogo/Terra/Ar/Água) — essa costuma ser a informação mais praticamente útil
+- Mencione planetas retrógrados e sua consequência comportamental
+- Nomeie graus reais quando relevante
+- Tempo presente, sem condicionais
+- Nomeie stelliums como stelliums
+- Mencione planetas retrógrados
+- Não repita info entre áreas — cada área revela algo novo
+- Analise o mapa como um SISTEMA, não planetas isolados
+
+Retorne APENAS JSON válido. Sem markdown. Sem preâmbulo.
+
+{"identity":{"title":"Identidade & Propósito","placements":"Posições chave: Sol signo+casa+grau, Lua, Ascendente, aspectos principais com orbs","pattern":"Análise completa das 5 partes. 8-15 frases. Analogia primeiro, depois planeta por planeta, tensão, padrão, fechamento.","shadow":"2-3 frases. A armadilha comportamental específica dessa configuração.","potential":"2-3 frases. O que essa pessoa é capaz quando a configuração funciona — específico, não inspiracional.","tips":["3-5 ações concretas e específicas baseadas nesse mapa. Não conselhos genéricos. Exemplos: 'Para de marcar decisões importantes de manhã cedo — sua mente precisa de tempo para aquecer.' / 'Seu melhor trabalho acontece sozinha. Proteja esse tempo como se fosse inegociável.' / 'Quando sentir o impulso de se explicar demais, isso é Saturno falando. Fala menos.'"],"buttons":["Uma pergunta que essa pessoa genuinamente quer resposta","Uma pergunta sobre como os outros a percebem vs como ela se vê","Uma pergunta sobre a tensão entre dois posicionamentos específicos"]},"love":{"title":"Relacionamentos & Amor","placements":"Vênus signo+casa, Descendente signo, regente Casa 7, aspectos de amor com orbs","pattern":"Análise completa das 5 partes: como essa pessoa ama, o que precisa, o que sabota, como é a dinâmica ideal.","shadow":"A forma específica que essa configuração cria problemas em relacionamentos.","potential":"Como os relacionamentos ficam no melhor dessa pessoa.","tips":["3-5 ações concretas para relacionamentos baseadas nesse mapa. Exemplos: 'Espera 48h antes de terminar qualquer coisa — sua Lua muda de ideia.' / 'Você precisa de um parceiro que aguente silêncio. Para de se desculpar por isso.' / 'No momento que começar a se diminuir num relacionamento, esse é o sinal.'"],"buttons":["Pergunta sobre o padrão em relacionamentos","Pergunta sobre o que precisa vs o que acha que quer","Pergunta sobre o parceiro ideal"]},"mind":{"title":"Mente & Comunicação","placements":"Mercúrio signo+casa, regente Casa 3, aspectos mentais chave","pattern":"Análise completa de como essa pessoa pensa, processa, se comunica.","shadow":"A armadilha cognitiva ou de comunicação específica.","potential":"O que essa mente é capaz no seu melhor.","tips":["3-5 ações concretas para trabalhar com essa mente. Exemplos: 'Suas melhores ideias chegam quando ninguém está olhando. Coloca isso na rotina.' / 'Para de explicar seu raciocínio no meio da conversa — termina o pensamento primeiro.' / 'Escreve antes de falar. Clarifica o que você realmente pensa.'"],"buttons":["Pergunta sobre como aprende","Pergunta sobre seu ponto cego de comunicação","Pergunta sobre qual ambiente serve à sua mente"]},"career":{"title":"Carreira & Missão","placements":"MC signo+grau, Saturno signo+casa, regente Casa 10, aspectos de carreira chave","pattern":"Análise completa do que essa pessoa é construída para fazer profissionalmente e por quê.","shadow":"O padrão específico de autossabotagem na carreira.","potential":"Como o sucesso profissional realmente parece para essa configuração.","tips":["3-5 ações concretas de carreira baseadas nesse mapa. Exemplos: 'Você precisa de autonomia real, não flexibilidade — são coisas diferentes. Negocia isso.' / 'Para de aceitar cargos onde você gerencia expectativas dos outros. Você é construída para liderar.' / 'Sua autoridade aparece mais quando você para de tentar ser querida.'"],"buttons":["Pergunta sobre sua autoridade natural","Pergunta sobre seu bloqueio de carreira","Pergunta sobre como o sucesso parece pra ela"]},"wounds":{"title":"Feridas & Cura","placements":"Quíron signo+casa+grau, Nodo Norte signo+casa+grau — SEMPRE NODO NORTE","pattern":"Análise completa das 5 partes da ferida central e direção de crescimento.","shadow":"Como a ferida aparece como comportamento quando não examinada.","potential":"O que se torna possível quando integrada — específico para esse mapa.","tips":["3-5 ações concretas de cura baseadas nesse mapa. Práticas, sem jargão terapêutico. Exemplos: 'Da próxima vez que se diminuir para deixar alguém confortável, nota isso em tempo real. É a ferida ativando.' / 'Sua direção de crescimento é Áries — age antes de estar pronta. Escolhe uma coisa essa semana.'"],"buttons":["Pergunta sobre a origem da ferida","Pergunta sobre o caminho de cura específico","Pergunta sobre o dom escondido na ferida"]}}`;
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}
+</script>
+</body>
+</html>
