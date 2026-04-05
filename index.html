@@ -113,8 +113,8 @@
 
   <div id="screen-input" class="screen active">
     <div class="form-intro">
-      <h2>Map your chart</h2>
-      <p>Your birth data is the coordinate.<br>What we do with it is the real work.</p>
+      <h2 id="form-intro-title">Map your chart</h2>
+      <p id="form-intro-sub">Your birth data is the coordinate.<br>What we do with it is the real work.</p>
     </div>
     <div class="form-group">
       <label>Your name</label>
@@ -153,18 +153,18 @@
         <option value="male">Man / Homem</option>
       </select>
     </div>
-    <div class="api-note">
+    <div class="api-note" id="api-note-text">
       <strong>Two keys needed (both free to start):</strong><br><br>
       1. <strong>RapidAPI key</strong> — get at <a href="https://rapidapi.com/gbattaglia/api/astrologer" target="_blank">rapidapi.com → search "Astrologer" by gbattaglia</a> → subscribe free → copy the X-RapidAPI-Key shown on the right side.<br><br>
       2. <strong>Anthropic key</strong> — get at <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a> → API Keys → Create Key.
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label>RapidAPI Key</label>
+        <label id="label-rapid">RapidAPI Key</label>
         <input type="password" id="rapid-key" placeholder="Paste your RapidAPI key" autocomplete="off">
       </div>
       <div class="form-group">
-        <label>Anthropic Key</label>
+        <label id="label-anthropic">Anthropic Key</label>
         <input type="password" id="api-key" placeholder="sk-ant-..." autocomplete="off">
       </div>
     </div>
@@ -258,6 +258,37 @@ async function getCoords(city, nation) {
   const d = await r.json();
   if (!d.length) throw new Error(`City not found: "${q}". Try a nearby larger city.`);
   return { lat: parseFloat(d[0].lat), lng: parseFloat(d[0].lon) };
+}
+
+function updateFormLanguage() {
+  const lang = document.getElementById('language').value;
+  const isPT = lang === 'pt';
+  document.getElementById('label-language').textContent = isPT ? 'Idioma' : 'Language';
+  document.getElementById('label-gender').textContent = isPT ? 'Gênero' : 'Gender';
+  document.getElementById('label-name').textContent = isPT ? 'Seu nome' : 'Your name';
+  document.getElementById('label-date').textContent = isPT ? 'Data de nascimento' : 'Birth date';
+  document.getElementById('label-time').textContent = isPT ? 'Horário de nascimento' : 'Birth time';
+  document.getElementById('label-optional').textContent = isPT ? '(opcional)' : '(optional)';
+  document.getElementById('label-city').textContent = isPT ? 'Cidade de nascimento' : 'Birth city';
+  document.getElementById('birth-city').placeholder = isPT ? 'ex: São Paulo, Brasil' : 'e.g. New York, US';
+  document.getElementById('name').placeholder = isPT ? 'Primeiro nome' : 'First name';
+  document.getElementById('opt-female').textContent = isPT ? 'Mulher' : 'Woman';
+  document.getElementById('opt-male').textContent = isPT ? 'Homem' : 'Man';
+  // Update api note
+  const apiNote = document.getElementById('api-note-text');
+  if (apiNote) {
+    apiNote.innerHTML = isPT
+      ? '<strong>Duas chaves necessárias (ambas gratuitas para começar):</strong><br><br>1. <strong>Chave RapidAPI</strong> — em <a href="https://rapidapi.com/gbattaglia/api/astrologer" target="_blank">rapidapi.com → busque "Astrologer" de gbattaglia</a> → assine grátis → copie a X-RapidAPI-Key.<br><br>2. <strong>Chave Anthropic</strong> — em <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a> → API Keys → Criar Chave.'
+      : '<strong>Two keys needed (both free to start):</strong><br><br>1. <strong>RapidAPI key</strong> — get at <a href="https://rapidapi.com/gbattaglia/api/astrologer" target="_blank">rapidapi.com → search "Astrologer" by gbattaglia</a> → subscribe free → copy the X-RapidAPI-Key.<br><br>2. <strong>Anthropic key</strong> — get at <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a> → API Keys → Create Key.';
+  }
+  document.getElementById('label-rapid').textContent = isPT ? 'Chave RapidAPI' : 'RapidAPI Key';
+  document.getElementById('label-anthropic').textContent = isPT ? 'Chave Anthropic' : 'Anthropic Key';
+  document.getElementById('btn-analyze').textContent = isPT ? 'Ler meu mapa →' : 'Read My Chart →';
+  // form intro
+  document.getElementById('form-intro-title').textContent = isPT ? 'Mapeie seu mapa' : 'Map your chart';
+  document.getElementById('form-intro-sub').textContent = isPT
+    ? 'Seus dados de nascimento são a coordenada.\nO que fazemos com eles é o trabalho real.'
+    : 'Your birth data is the coordinate.\nWhat we do with it is the real work.';
 }
 
 let autocompleteTimer = null;
@@ -767,6 +798,8 @@ ANALOGY RULES — this is critical:
 - BAD: continuing the metaphor after the opening — "emerges with unique treasures", "the architect finishes the blueprint" etc. ONE metaphor, then DROP IT.
 - The analogy is ONE sentence or two MAX. After that: direct, plain language only.
 - The analogy should make the person think "how did you know that" — not "wait, let me re-read that"
+- The analogy must NOT make the person seem special, superior, or impressive. It describes a behavior pattern they recognize as true — not a compliment.
+- BAD ending: "in conversations nobody else understands" (arrogant). GOOD ending: "and disappears with them to a corner." (just behavior)
 - After the analogy: no more poetic language. Every sentence is a direct statement of fact about this person."
 
 CUSP RULE — important:
@@ -776,15 +809,26 @@ CUSP RULE — important:
 
 WRITING STRUCTURE — follow exactly:
 
-1. OPENING ANALOGY (1 paragraph): One clear, creative, immediately-understood image of this person. One situation. Not layered.
+1. OPENING ANALOGY (1 sentence, 2 max): One clear, immediately-understood behavior pattern. Not a compliment — a recognition.
 
-2. CORE STRUCTURE (planet by planet): Name each key placement with exact aspect and orb. Direct behavioral consequence. "Aries Rising + Pluto trine exact = you don't enter a room, you arrive. Involuntary. People feel it before you speak."
+2. CORE STRUCTURE (planet by planet): Each placement gets 1-2 sentences MAX. State the placement, state the behavioral consequence. Nothing else.
+   GOOD: "Sun Capricorn in the 9th: builds slowly, but what she builds lasts. Never starts something without knowing where it ends."
+   BAD: "Sun in Capricorn in the 9th house means her identity is constructed around expansion with purpose and meaning."
+   Rule: if you can cut a word without losing meaning, cut it.
 
-3. CENTRAL TENSION: The most important aspect in this area and what it creates behaviorally — not symbolically.
+3. CENTRAL TENSION: 2-3 sentences on the most important aspect. What it creates in daily behavior — not in theory.
 
-4. BEHAVIORAL PATTERN: 2-3 modes this person operates in. What looks contradictory but is actually the same system.
+4. BEHAVIORAL PATTERN: 2 modes, named simply. One sentence each.
 
-5. ONE-LINE CLOSER: Single sentence. Punchy. True. Slightly uncomfortable.
+5. ONE-LINE CLOSER: Single sentence. True. Slightly uncomfortable. No flourish.
+
+SURGICAL WRITING RULES:
+- Every sentence must earn its place. If it doesn't add new information, delete it.
+- No sentence should explain what a previous sentence already said.
+- Prefer short sentences. If a sentence has more than 20 words, split it or cut it.
+- Never use: "means that", "which indicates", "this suggests", "in other words", "essentially"
+- State. Don't explain. Trust the reader.
+- IMPARCIAL LANGUAGE: Use "Capricorns with this placement tend to..." instead of "you are...". The person should think "wow, that's true" — not "I'm not like that". This lowers resistance and increases recognition.
 
 RULES:
 - The person's gender is provided — use correct pronouns throughout. For women: she/her/herself. For men: he/him/himself. Never use "they" or gender-neutral language. Every sentence must use the correct gendered pronoun.
@@ -831,15 +875,26 @@ REGRA DE CÚSPIDE — importante:
 
 ESTRUTURA DE ESCRITA — siga exatamente:
 
-1. ANALOGIA DE ABERTURA (1 parágrafo): Uma imagem clara, criativa, imediatamente compreendida. Uma situação. Sem camadas.
+1. ANALOGIA DE ABERTURA (1 frase, 2 no máximo): Um padrão de comportamento claro e imediatamente reconhecível. Não é elogio — é reconhecimento.
 
-2. ESTRUTURA CENTRAL (planeta por planeta): Nomeie cada posição chave com aspecto exato e orb. Consequência comportamental direta. "Ascendente Áries + Plutão trígono exato = você não entra numa sala, você chega. Involuntário. As pessoas sentem antes de você falar."
+2. ESTRUTURA CENTRAL (planeta por planeta): Cada posição recebe 1-2 frases NO MÁXIMO. Nomeia a posição, nomeia a consequência comportamental. Nada mais.
+   BOM: "Sol Capricórnio na Casa 9: cresce devagar, mas o que constrói dura. Não começa nada sem saber onde vai terminar."
+   RUIM: "Sol em Capricórnio na Casa 9 significa que sua identidade é construída em torno de expansão com propósito e sentido."
+   Regra: se dá para cortar uma palavra sem perder o significado, corta.
 
-3. TENSÃO CENTRAL: O aspecto mais importante nessa área e o que cria comportamentalmente — não simbolicamente.
+3. TENSÃO CENTRAL: 2-3 frases sobre o aspecto mais importante. O que cria no comportamento cotidiano — não na teoria.
 
-4. PADRÃO COMPORTAMENTAL: 2-3 modos que essa pessoa opera. O que parece contraditório mas é o mesmo sistema.
+4. PADRÃO COMPORTAMENTAL: 2 modos, nomeados de forma simples. Uma frase cada.
 
-5. FECHAMENTO EM UMA FRASE: Uma frase. Direta. Verdadeira. Levemente desconfortável.
+5. FECHAMENTO EM UMA FRASE: Uma frase. Verdadeira. Levemente desconfortável. Sem floreio.
+
+REGRAS DE ESCRITA CIRÚRGICA:
+- Cada frase precisa justificar sua existência. Se não acrescenta informação nova, corta.
+- Nenhuma frase deve explicar o que a frase anterior já disse.
+- Prefira frases curtas. Se uma frase tem mais de 20 palavras, divide ou corta.
+- Nunca use: "o que significa que", "o que indica", "isso sugere", "em outras palavras", "essencialmente"
+- Afirma. Não explica. Confia no leitor.
+- LINGUAGEM IMPARCIAL: Use "capricornianos com esse posicionamento costumam..." em vez de "você é...". A pessoa deve pensar "nossa, é verdade" — não "não sou assim".
 
 REGRAS:
 - O gênero da pessoa é fornecido — use concordância gramatical correta em português. Para mulheres: ela, dela, si mesma, a ela, sozinha, determinada, ansiosa, etc. Para homens: ele, dele, si mesmo, a ele, sozinho, determinado, ansioso, etc. NUNCA use linguagem neutra ou genérica. Toda frase deve ter concordância de gênero correta.
@@ -857,8 +912,7 @@ REGRAS:
 Retorne APENAS JSON válido. Sem markdown. Sem preâmbulo.
 
 {"identity":{"title":"Identidade & Propósito","placements":"Posições chave: Sol signo+casa+grau, Lua, Ascendente, aspectos principais com orbs","pattern":"Análise completa das 5 partes. 8-15 frases. Analogia primeiro, depois planeta por planeta, tensão, padrão, fechamento.","shadow":"2-3 frases. A armadilha comportamental específica dessa configuração.","potential":"2-3 frases. O que essa pessoa é capaz quando a configuração funciona — específico, não inspiracional.","tips":["3-5 ações concretas e específicas baseadas nesse mapa. Não conselhos genéricos. Exemplos: 'Para de marcar decisões importantes de manhã cedo — sua mente precisa de tempo para aquecer.' / 'Seu melhor trabalho acontece sozinha. Proteja esse tempo como se fosse inegociável.' / 'Quando sentir o impulso de se explicar demais, isso é Saturno falando. Fala menos.'"],"buttons":["Uma pergunta que essa pessoa genuinamente quer resposta","Uma pergunta sobre como os outros a percebem vs como ela se vê","Uma pergunta sobre a tensão entre dois posicionamentos específicos"]},"love":{"title":"Relacionamentos & Amor","placements":"Vênus signo+casa, Descendente signo, regente Casa 7, aspectos de amor com orbs","pattern":"Análise completa das 5 partes: como essa pessoa ama, o que precisa, o que sabota, como é a dinâmica ideal.","shadow":"A forma específica que essa configuração cria problemas em relacionamentos.","potential":"Como os relacionamentos ficam no melhor dessa pessoa.","tips":["3-5 ações concretas para relacionamentos baseadas nesse mapa. Exemplos: 'Espera 48h antes de terminar qualquer coisa — sua Lua muda de ideia.' / 'Você precisa de um parceiro que aguente silêncio. Para de se desculpar por isso.' / 'No momento que começar a se diminuir num relacionamento, esse é o sinal.'"],"buttons":["Pergunta sobre o padrão em relacionamentos","Pergunta sobre o que precisa vs o que acha que quer","Pergunta sobre o parceiro ideal"]},"mind":{"title":"Mente & Comunicação","placements":"Mercúrio signo+casa, regente Casa 3, aspectos mentais chave","pattern":"Análise completa de como essa pessoa pensa, processa, se comunica.","shadow":"A armadilha cognitiva ou de comunicação específica.","potential":"O que essa mente é capaz no seu melhor.","tips":["3-5 ações concretas para trabalhar com essa mente. Exemplos: 'Suas melhores ideias chegam quando ninguém está olhando. Coloca isso na rotina.' / 'Para de explicar seu raciocínio no meio da conversa — termina o pensamento primeiro.' / 'Escreve antes de falar. Clarifica o que você realmente pensa.'"],"buttons":["Pergunta sobre como aprende","Pergunta sobre seu ponto cego de comunicação","Pergunta sobre qual ambiente serve à sua mente"]},"career":{"title":"Carreira & Missão","placements":"MC signo+grau, Saturno signo+casa, regente Casa 10, aspectos de carreira chave","pattern":"Análise completa do que essa pessoa é construída para fazer profissionalmente e por quê.","shadow":"O padrão específico de autossabotagem na carreira.","potential":"Como o sucesso profissional realmente parece para essa configuração.","tips":["3-5 ações concretas de carreira baseadas nesse mapa. Exemplos: 'Você precisa de autonomia real, não flexibilidade — são coisas diferentes. Negocia isso.' / 'Para de aceitar cargos onde você gerencia expectativas dos outros. Você é construída para liderar.' / 'Sua autoridade aparece mais quando você para de tentar ser querida.'"],"buttons":["Pergunta sobre sua autoridade natural","Pergunta sobre seu bloqueio de carreira","Pergunta sobre como o sucesso parece pra ela"]},"wounds":{"title":"Feridas & Cura","placements":"Quíron signo+casa+grau, Nodo Norte signo+casa+grau — SEMPRE NODO NORTE","pattern":"Análise completa das 5 partes da ferida central e direção de crescimento.","shadow":"Como a ferida aparece como comportamento quando não examinada.","potential":"O que se torna possível quando integrada — específico para esse mapa.","tips":["3-5 ações concretas de cura baseadas nesse mapa. Práticas, sem jargão terapêutico. Exemplos: 'Da próxima vez que se diminuir para deixar alguém confortável, nota isso em tempo real. É a ferida ativando.' / 'Sua direção de crescimento é Áries — age antes de estar pronta. Escolhe uma coisa essa semana.'"],"buttons":["Pergunta sobre a origem da ferida","Pergunta sobre o caminho de cura específico","Pergunta sobre o dom escondido na ferida"]}}`;
-</script>
-<script>
+
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('sw.js').catch(() => {});
