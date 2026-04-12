@@ -599,8 +599,8 @@ async function generateChart(){
       const d=await r.json();if(!d.length)throw new Error('Could not locate birth city.');
       lat=parseFloat(d[0].lat);lng=parseFloat(d[0].lon);
     }
-    let timezone='UTC';
-    try{const tz=await fetch(`https://timeapi.io/api/TimeZone/coordinate?latitude=${lat}&longitude=${lng}`);const tzd=await tz.json();if(tzd.timeZone)timezone=tzd.timeZone;}catch{}
+    // Timezone resolved server-side
+    const timezone='UTC';
 
     const[year,month,day]=user.birthDate.split('-').map(Number);
     let hour=12,minute=0;
