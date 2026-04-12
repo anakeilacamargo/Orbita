@@ -43,7 +43,7 @@ export default async function handler(req, res) {
 
     const [chartData, ctxData] = await Promise.all([chartResp.json(), ctxResp.json()]);
 
-    if (chartData.status !== 'OK') {
+    if (!chartData.chart_data) {
       return res.status(400).json({ error: 'Astrologer API error', detail: chartData });
     }
 
