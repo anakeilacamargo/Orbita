@@ -642,7 +642,7 @@ async function generateChart(){
   }catch(e){
     document.getElementById('state-loading').style.display='none';
     document.getElementById('state-error').style.display='flex';
-    document.getElementById('error-msg').textContent=e.message;
+    document.getElementById('error-msg').textContent=e.message+' | city:'+user.birthCity+' lat:'+user.birthLat+' date:'+user.birthDate;
   }
 }
 
