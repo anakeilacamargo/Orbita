@@ -767,8 +767,8 @@ function buildFullChartHTML(raw,isPT){
   const planets=raw.planets||[];
   const aspects=raw.aspects||[];
   const SIGN_PT={Aries:'Áries',Taurus:'Touro',Gemini:'Gêmeos',Cancer:'Câncer',Leo:'Leão',Virgo:'Virgem',Libra:'Libra',Scorpio:'Escorpião',Sagittarius:'Sagitário',Capricorn:'Capricórnio',Aquarius:'Aquário',Pisces:'Peixes'};
-  const PLANET_PT={'Sun':'Sol','Moon':'Lua','Mercury':'Mercúrio','Venus':'Vênus','Mars':'Marte','Jupiter':'Júpiter','Saturn':'Saturno','Uranus':'Urano','Neptune':'Netuno','Pluto':'Plutão','Chiron':'Quíron','True_North_Lunar_Node':'Nodo Norte','True_Node':'Nodo Norte','Mean_Lilith':'Lilith','Ascendant':'Ascendente','Medium_Coeli':'Meio do Céu'};
-  const ASPECT_PT={conjunction:'conjunção',opposition:'oposição',trine:'trígono',square:'quadratura',sextile:'sextil',quincunx:'quincúncio'};
+  const PLANET_PT={'Sun':'Sol','Moon':'Lua','Mercury':'Mercúrio','Venus':'Vênus','Mars':'Marte','Jupiter':'Júpiter','Saturn':'Saturno','Uranus':'Urano','Neptune':'Netuno','Pluto':'Plutão','Chiron':'Quíron','True_North_Lunar_Node':'Nodo Norte','True_Node':'Nodo Norte','Mean_Node':'Nodo Norte','North_Node':'Nodo Norte','Mean_Lilith':'Lilith','True_Lilith':'Lilith','Lilith':'Lilith','Ascendant':'Ascendente','Medium_Coeli':'Meio do Céu','Descendant':'Descendente','Imum_Coeli':'Fundo do Céu'};
+  const ASPECT_PT={conjunction:'conjunção',opposition:'oposição',trine:'trígono',square:'quadratura',sextile:'sextil',quincunx:'quincúncio',semisextile:'semi-sextil',semisquare:'semi-quadratura',sesquisquare:'sesquiquadratura',sesquiquadrate:'sesquiquadratura',biquintile:'biquintil',quintile:'quintil'};
   const pN=n=>isPT?(PLANET_PT[n]||n):n;
   const sN=s=>isPT?(SIGN_PT[s]||s):s;
   const aN=a=>isPT?(ASPECT_PT[a?.toLowerCase()]||a):a;
