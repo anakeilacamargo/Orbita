@@ -26,6 +26,14 @@ export default async function handler(req, res) {
   };
 
   try {
+    // Fetch timezone from coordinates (server-side, no CORS issues)
+    let timezone = 'UTC';
+    try {
+      const tzResp = await fetch(`https://timeapi.io/api/TimeZone/coordinate?latitude=${subject.latitude}&longitude=${subject.longitude}`);
+      const tzData = await tzResp.json();
+      if (tzData.timeZone) timezone = tzData.timeZone;
+    } catch {}
+    subject.timezone = timezone;
     // Fetch chart + context in parallel
     const [chartResp, ctxResp] = await Promise.all([
       fetch('https://astrologer.p.rapidapi.com/api/v5/chart/birth-chart', {
