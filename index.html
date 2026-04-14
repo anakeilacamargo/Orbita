@@ -781,9 +781,9 @@ function renderChartTab(placements,lang){
   }
 
   html+=`<div class="big3">
-    <div class="big3-item"><div class="big3-label">${isPT?'Sol':'Sun'}</div><div class="big3-value" style="color:${ELEM_COLOR[placements.sun]||'var(--gold)'}">${isPT?translateSign(placements.sun):placements.sun}</div><div class="big3-deg">${placements.sunDeg}</div></div>
-    <div class="big3-item"><div class="big3-label">${isPT?'Lua':'Moon'}</div><div class="big3-value" style="color:${ELEM_COLOR[placements.moon]||'var(--gold)'}">${isPT?translateSign(placements.moon):placements.moon}</div><div class="big3-deg">${placements.moonDeg}</div></div>
-    <div class="big3-item"><div class="big3-label">Rising</div><div class="big3-value" style="color:${ELEM_COLOR[placements.asc]||'var(--gold)'}">${isPT?translateSign(placements.asc):placements.asc}</div><div class="big3-deg">${placements.ascDeg}</div></div>
+    <div class="big3-item"><div class="big3-label">${isPT?'Sol':'Sun'}</div><div class="big3-value">${isPT?translateSign(placements.sun):placements.sun}</div><div class="big3-deg">${placements.sunDeg}</div></div>
+    <div class="big3-item"><div class="big3-label">${isPT?'Lua':'Moon'}</div><div class="big3-value">${isPT?translateSign(placements.moon):placements.moon}</div><div class="big3-deg">${placements.moonDeg}</div></div>
+    <div class="big3-item"><div class="big3-label">Rising</div><div class="big3-value">${isPT?translateSign(placements.asc):placements.asc}</div><div class="big3-deg">${placements.ascDeg}</div></div>
   </div>`;
 
   if(stelliums.length){
