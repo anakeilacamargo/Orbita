@@ -151,16 +151,17 @@ select.ob-input option{background:#1a1b22;}
 
 /* FULL CHART TABLE */
 .full-chart{padding:0 20px;}
-.planet-row{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--border);}
+.planet-row{display:flex;align-items:center;gap:0;padding:13px 0;border-bottom:1px solid var(--border);}
 .planet-row:last-child{border-bottom:none;}
-.planet-name{font-size:14px;font-weight:400;color:var(--text);width:80px;flex-shrink:0;}
-.planet-sign{font-size:14px;color:var(--gold);width:100px;flex-shrink:0;}
-.planet-house{font-size:12px;color:var(--text-muted);width:60px;flex-shrink:0;}
+.planet-name{font-size:14px;font-weight:400;color:var(--text);flex:1.2;}
+.planet-sign{font-size:14px;color:var(--gold);flex:1.3;}
+.planet-house{font-size:13px;color:var(--text-muted);flex:0.8;}
+.planet-deg{font-size:13px;color:var(--text-dim);flex:0.8;text-align:right;}
 .planet-deg{font-size:12px;color:var(--text-dim);margin-left:auto;}
 .planet-retro{font-size:11px;color:#e07070;margin-left:4px;}
 .table-header{display:flex;align-items:center;gap:10px;padding:8px 0 4px;margin-bottom:4px;}
 .table-header span{font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:var(--text-dim);}
-.aspect-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;}
+.aspect-row{display:flex;align-items:center;gap:0;padding:11px 0;border-bottom:1px solid var(--border);font-size:13px;}
 .aspect-row:last-child{border-bottom:none;}
 
 /* LOCKED */
@@ -492,6 +493,10 @@ select.ob-input option{background:#1a1b22;}
             <div class="moon-card">
               <div class="moon-card-title">Planets today</div>
               <div id="sky-planets"></div>
+            </div>
+            <div class="moon-card">
+              <div class="moon-card-title">Key aspects today</div>
+              <div id="sky-aspects"></div>
             </div>
           </div>
         </div>
@@ -844,14 +849,14 @@ function renderChartTab(placements,lang){
     <div class="section-body open" id="sec-planets">${buildPlanetsHTML(chartRawData,isPT)}</div>
   </div>`;
 
-  // ASPECTS (collapsible, closed by default)
+  // ASPECTS (collapsible, open by default)
   html+=`<div class="section-block">
     <div class="section-header" onclick="toggleSection('sec-aspects')">
       <div class="section-icon" style="background:#d47fa618;color:#d47fa6">⚯</div>
       <div class="section-title">${isPT?'Aspectos':'Aspects'}</div>
-      <div class="section-chevron" id="chev-aspects">▼</div>
+      <div class="section-chevron open" id="chev-aspects">▼</div>
     </div>
-    <div class="section-body" id="sec-aspects">${buildAspectsHTML(chartRawData,isPT)}</div>
+    <div class="section-body open" id="sec-aspects">${buildAspectsHTML(raw,isPT)}</div>
   </div>`;
 
   // ELEMENTS (collapsible, closed by default)
@@ -871,19 +876,15 @@ function renderChartTab(placements,lang){
   html+=`<div style="padding:20px;text-align:center;"><a href="/terms.html" target="_blank" style="font-size:12px;color:var(--text-dim);text-decoration:none;">Terms · Privacy · Disclaimer</a></div>`;
   wrap.innerHTML=html;
 
-  // Inject mandala via Blob URL
+  // Inject mandala via DOM after render
   if(chartSVG){
     setTimeout(()=>{
       const container=document.getElementById('mandala-container');
       if(!container)return;
-      const blob=new Blob([chartSVG],{type:'image/svg+xml'});
-      const url=URL.createObjectURL(blob);
-      const img=document.createElement('img');
-      img.src=url;
-      img.style.cssText='width:100%;display:block;border-radius:16px;';
-      img.onload=()=>URL.revokeObjectURL(url);
-      container.appendChild(img);
-    },200);
+      container.innerHTML=chartSVG;
+      const svg=container.querySelector('svg');
+      if(svg){svg.style.cssText='width:100%;height:auto;display:block;';}
+    },100);
   }
 }
 
@@ -913,7 +914,7 @@ function renderReadingTab(placements,lang){
   }
   sections.forEach((sec,idx)=>{
     const data=currentData?.[sec.key];
-    const isLocked=!isPaid&&idx>0;
+    const isLocked=false; // unlock all for now
     if(isLocked){
       const preview=data?.[0]?.text?.substring(0,120)||'';
       html+=`<div class="section-block"><div class="locked-section">
@@ -1014,10 +1015,10 @@ function buildAspectsHTML(raw,isPT){
     const col=ASPECT_COLORS[a.aspect?.toLowerCase()]||'var(--text-muted)';
     const orb=Math.abs(a.orbit)<0.5?(isPT?'exato':'exact'):`${Math.abs(a.orbit).toFixed(1)}°`;
     html+=`<div class="aspect-row">
-      <span style="color:var(--text);min-width:70px">${pN(a.p1_name)}</span>
-      <span style="color:${col};min-width:80px">${aN(a.aspect)}</span>
-      <span style="color:var(--text);flex:1">${pN(a.p2_name)}</span>
-      <span style="color:var(--text-dim);font-size:11px">${orb}</span>
+      <span style="color:var(--text);flex:1.2">${pN(a.p1_name)}</span>
+      <span style="color:${col};flex:1.3">${aN(a.aspect)}</span>
+      <span style="color:var(--text);flex:1.2">${pN(a.p2_name)}</span>
+      <span style="color:var(--text-dim);font-size:11px;flex:0.6;text-align:right">${orb}</span>
     </div>`;
   }
   html+='</div>';
@@ -1156,13 +1157,57 @@ async function loadSky(){
     const sign=SIGNS[signIdx];
     const ELEM_COLOR={Aries:'#e07060',Taurus:'#8fbf8a',Gemini:'#7fb5c9',Cancer:'#8b7fd4',Leo:'#e07060',Virgo:'#8fbf8a',Libra:'#7fb5c9',Scorpio:'#8b7fd4',Sagittarius:'#e07060',Capricorn:'#8fbf8a',Aquarius:'#7fb5c9',Pisces:'#8b7fd4'};
     html+=`<div style="display:flex;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);">
-      <div style="font-size:14px;color:var(--text);width:80px">${p.name}</div>
+      <div style="font-size:14px;color:var(--text);flex:1.2">${p.name}</div>
       <div style="font-size:14px;color:${ELEM_COLOR[sign]||'var(--gold)'};">${sN(sign)}</div>
       <div style="font-size:12px;color:var(--text-dim);margin-left:auto">${deg}°</div>
     </div>`;
   }
 
   document.getElementById('sky-planets').innerHTML=html;
+
+  // Calculate aspects between current planets
+  const ASPECT_DEFS=[
+    {name:isPT?'conjunção':'conjunction',angle:0,orb:8,color:'#c9a96e'},
+    {name:isPT?'oposição':'opposition',angle:180,orb:8,color:'#e07070'},
+    {name:isPT?'trígono':'trine',angle:120,orb:6,color:'#8fbf8a'},
+    {name:isPT?'quadratura':'square',angle:90,orb:5,color:'#e07070'},
+    {name:isPT?'sextil':'sextile',angle:60,orb:4,color:'#7fb5c9'},
+  ];
+
+  let aspHtml='';
+  const planetList=planets.map(p=>{
+    const lon=((p.lon%360)+360)%360;
+    return{name:p.name,lon};
+  });
+
+  const foundAspects=[];
+  for(let i=0;i<planetList.length;i++){
+    for(let j=i+1;j<planetList.length;j++){
+      const diff=Math.abs(planetList[i].lon-planetList[j].lon);
+      const angle=diff>180?360-diff:diff;
+      for(const asp of ASPECT_DEFS){
+        const orb=Math.abs(angle-asp.angle);
+        if(orb<=asp.orb){
+          foundAspects.push({p1:planetList[i].name,p2:planetList[j].name,asp:asp.name,orb:orb.toFixed(1),color:asp.color});
+        }
+      }
+    }
+  }
+
+  foundAspects.sort((a,b)=>parseFloat(a.orb)-parseFloat(b.orb));
+
+  if(foundAspects.length){
+    aspHtml=foundAspects.map(a=>`<div class="aspect-row">
+      <span style="color:var(--text);flex:1.2">${a.p1}</span>
+      <span style="color:${a.color};flex:1.3">${a.asp}</span>
+      <span style="color:var(--text);flex:1.2">${a.p2}</span>
+      <span style="color:var(--text-dim);font-size:11px;flex:0.6;text-align:right">${a.orb}°</span>
+    </div>`).join('');
+  } else {
+    aspHtml=`<div style="font-size:13px;color:var(--text-dim);padding:10px 0">${isPT?'Nenhum aspecto exato agora.':'No exact aspects now.'}</div>`;
+  }
+
+  document.getElementById('sky-aspects').innerHTML=`<div class="full-chart">${aspHtml}</div>`;
   document.getElementById('sky-loading').style.display='none';
   document.getElementById('sky-content').style.display='block';
 }
