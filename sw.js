@@ -1,4 +1,4 @@
-const CACHE = 'orbita-v2';
+const CACHE = 'orbita-v3';
 const ASSETS = ['/', '/index.html', '/manifest.json', '/icon.svg'];
 
 self.addEventListener('install', e => {
