@@ -371,6 +371,7 @@ select.ob-input option{background:#1a1b22;}
   <div class="pw-cta"><button class="btn-gold" onclick="goPay()">Start Free Trial →</button></div>
   <div class="pw-legal">By continuing you agree to our <a href="/terms.html" target="_blank">Terms</a> & <a href="/terms.html#privacy" target="_blank">Privacy Policy</a>. Cancel anytime.</div>
   <div class="pw-free-link"><button onclick="launchApp()">Continue with free reading</button></div>
+  <div style="text-align:center;padding-bottom:20px;"><button onclick="debugSkipAPI()" style="background:none;border:none;color:var(--text-dim);font-size:11px;cursor:pointer;opacity:0.3;">⚙ test mode</button></div>
 </div>
 
 <!-- MAIN APP -->
@@ -575,6 +576,60 @@ function launchApp(){
   initAITab();
   setTimeout(showReview,45000);
   generateChart();
+}
+
+// DEBUG: skip API, use mock data (remove before launch)
+function debugSkipAPI(){
+  user={name:'Ana',gender:'female',lang:'pt',birthDate:'2004-12-25',birthTime:'14:26',birthCity:'São Paulo, Brazil',birthLat:'-23.5505',birthLng:'-46.6333',birthNation:'BR'};
+  showPage('page-app');
+  initMoon();
+  const mockPlacements={sun:'Cap',sunDeg:'4°14\'',moon:'Gem',moonDeg:'23°57\'',asc:'Ari',ascDeg:'22°15\''};
+  const mockData={
+    universal:{archetype:'O Transformador',archetype_definition:'Está aqui para atravessar e facilitar mudanças profundas — em si e no que toca.',text:'Sol em Capricórnio na Casa 9 com Ascendente Áries: alguém que age antes de pensar, mas só em direção ao que tem substância. A velocidade é Áries; o alvo é Capricórnio. Nodo Norte em Touro na Casa 1 indica que o crescimento vem de parar de se lançar em novos começos e aprender a terminar o que foi começado.',key_placement:'Plutão trígono exato Ascendente (0°24\')',chart_signature:'Fogo-Cardinal'},
+    personalidade:[
+      {question_id:'natal_p1',question:'Como você se apresenta vs. quem você realmente é?',label:'Máscara protetora',label_definition:'A face que você mostra ao mundo protege algo mais vulnerável por baixo.',text:'Ascendente Áries passa confiança imediata e iniciativa — você parece saber o que quer. Mas Sol em Capricórnio na Casa 9 opera por dentro com dúvida estrutural: será que vale a pena? A impulsividade visível esconde uma exigência interna muito mais rigorosa.',key_placement:'Asc Áries vs. Sol Cap Casa 9'},
+      {question_id:'natal_p2',question:'O que te move emocionalmente?',label:'Profundidade',label_definition:'Você precisa ir fundo — em pessoas, ideias, experiências. Superfície te entedia.',text:'Lua em Gêmeos na Casa 3 busca conexões múltiplas e informação constante. Mas com Plutão em oposição exata (orbe 1°45\'), essa leveza vira intensidade: você precisa entender o que está por baixo, não só o que aparece. Conversas rasas te esgotam.',key_placement:'Lua Gêmeos Casa 3 oposição Plutão Sag Casa 9'},
+      {question_id:'natal_p3',question:'Qual é sua forma natural de pensar?',label:'Veloz e disperso',label_definition:'Capta rápido, conecta muito, mas pode perder foco ou profundidade.',text:'Mercúrio em Sagitário na Casa 8 conjunto Vênus (orbe 1°31\'): você pensa em grandes saltos, conectando pontos distantes. O problema é a execução — a mente chega no destino antes do corpo e perde interesse no meio do caminho.',key_placement:'Mercúrio Sag Casa 8 + Plutão conjunção'}
+    ],
+    relacionamentos:[
+      {question_id:'natal_r1',question:'O que você busca instintivamente numa parceria?',label:'Intensidade',label_definition:'Você busca profundidade emocional e psicológica — conexão que vai além da superfície.',text:'Descendente Libra com Júpiter na Casa 6 oposição Ascendente: você atrai parceiros que parecem equilibrados mas carregam suas próprias contradições. Vênus conjunta Mercúrio e Marte em Sagitário na Casa 8 indica que o que você chama de amor começa pela cabeça.',key_placement:'Desc Libra + Vênus/Marte Casa 8'},
+      {question_id:'natal_r2',question:'Qual é o seu padrão afetivo recorrente?',label:'Autossuficiência excessiva',label_definition:'Dificuldade de precisar do outro — a vulnerabilidade parece perigo.',text:'Saturno retrógrado em Câncer na Casa 4 quadratura Ascendente (orbe 3°16\'): você aprendeu cedo que depender é arriscado. O resultado é que você oferece muito e pede pouco, e quando a outra pessoa não percebe o quanto você está carregando, interpreta como descaso.',key_placement:'Saturno ℞ Can Casa 4 quadratura Asc'},
+      {question_id:'natal_r3',question:'Como você lida com conflito e intimidade real?',label:'Processa internamente antes',label_definition:'Precisa digerir antes de falar — pode parecer distante.',text:'Marte em Sagitário 0° na Casa 8 quadratura Urano (orbe 3°66\'): conflito te ativa, mas você sai antes de resolver. A tendência é dar um passo atrás, processar sozinha, e voltar quando já está "resolvido" — exceto que o outro ficou no escuro durante todo o processo.',key_placement:'Marte Sag Casa 8 quadratura Urano'}
+    ],
+    carreira:[
+      {question_id:'natal_c1',question:'Qual é o seu propósito central?',label:'Transformar',label_definition:'Está aqui para mudar o que encontra — pessoas, estruturas, situações.',text:'MC Capricórnio 22° conjunto Quíron (orbe 2°42\'): você está aqui para construir algo que dure, mas o caminho passa por curar a ferida de não se sentir competente o suficiente. Nodo Norte em Touro na Casa 1 indica que a autoridade vem de permanecer, não de se reinventar.',key_placement:'MC Cap conjunto Quíron Casa 10'},
+      {question_id:'natal_c2',question:'Como você trabalha melhor?',label:'Independente',label_definition:'Produz melhor sem supervisão ou estrutura imposta.',text:'Saturno retrógrado em Câncer na Casa 4 oposição MC: você tem dificuldade com hierarquia que não respeita. Sol na Casa 9 com stellium em Sagitário na Casa 8 indica que você precisa de autonomia intelectual real — não flexibilidade de horário, mas liberdade de método.',key_placement:'Sol Casa 9 + Saturno ℞ Casa 4'},
+      {question_id:'natal_c3',question:'O que pode travar sua trajetória?',label:'Impaciência',label_definition:'Abandona antes de colher — o processo longo desmotiva.',text:'Ascendente Áries quadratura Saturno e Quíron: você começa rápido e quer resultado imediato. Quando o retorno demora, interpreta como sinal de que estava errada — e muda de direção antes de a semente germinar. Nodo Norte em Touro diz o oposto: a abundância vem de esperar.',key_placement:'Asc Áries quadratura Saturno Casa 4'}
+    ],
+    desafios:[
+      {question_id:'natal_d1',question:'Qual é a sua ferida central?',label:'Inadequação',label_definition:'Sensação de nunca ser suficiente — se manifesta como perfeccionismo ou autossabotagem.',text:'Quíron em Capricórnio 25° na Casa 10 conjunto MC: a ferida está na arena pública. Você teme ser julgada como incompetente antes de provar o contrário, então ou se lança antes de estar pronta ou adia indefinidamente. Saturno retrógrado amplifica isso.',key_placement:'Quíron Cap Casa 10 conjunto MC'},
+      {question_id:'natal_d2',question:'Qual padrão você repete sem perceber?',label:'Fuga antes da profundidade',label_definition:'Quando a intimidade real se aproxima, recua.',text:'Nodo Sul em Escorpião na Casa 7 (por oposição ao Nodo Norte): você sabe como ir fundo, mas faz isso para os outros, não para si mesma. Quando alguém começa a ir fundo em você, ativa o Ascendente Áries e você se move para outro projeto, outra cidade, outra ideia.',key_placement:'Nodo Norte Touro Casa 1 vs. padrão Escorpião Casa 7'},
+      {question_id:'natal_d3',question:'Qual é o seu maior potencial não desenvolvido?',label:'Comprometimento',label_definition:'Capacidade de ficar — em relações, projetos, escolhas — que ainda gera resistência.',text:'Nodo Norte em Touro na Casa 1 é a instrução mais clara do mapa: construir presença física e financeira estável, sem precisar de movimento constante para se sentir viva. O potencial não desenvolvido não é uma habilidade — é a tolerância à quietude.',key_placement:'Nodo Norte Touro Casa 1'}
+    ]
+  };
+  chartRawData={planets:[
+    {name:'Sun',sign:'Cap',abs_pos:274.23,house:'Ninth_House',retrograde:false},
+    {name:'Moon',sign:'Gem',abs_pos:83.94,house:'Third_House',retrograde:false},
+    {name:'Mercury',sign:'Sag',abs_pos:252.51,house:'Eighth_House',retrograde:false},
+    {name:'Venus',sign:'Sag',abs_pos:251.20,house:'Eighth_House',retrograde:false},
+    {name:'Mars',sign:'Sag',abs_pos:240.01,house:'Eighth_House',retrograde:false},
+    {name:'Jupiter',sign:'Lib',abs_pos:196.64,house:'Sixth_House',retrograde:false},
+    {name:'Saturn',sign:'Can',abs_pos:115.41,house:'Fourth_House',retrograde:true},
+    {name:'Uranus',sign:'Pis',abs_pos:333.68,house:'Eleventh_House',retrograde:false},
+    {name:'Neptune',sign:'Aqu',abs_pos:313.64,house:'Tenth_House',retrograde:false},
+    {name:'Pluto',sign:'Sag',abs_pos:262.49,house:'Ninth_House',retrograde:false},
+    {name:'Chiron',sign:'Cap',abs_pos:295.00,house:'Tenth_House',retrograde:false},
+    {name:'True_North_Lunar_Node',sign:'Tau',abs_pos:30.12,house:'First_House',retrograde:true},
+    {name:'Mean_Lilith',sign:'Can',abs_pos:106.08,house:'Third_House',retrograde:false},
+    {name:'Ascendant',sign:'Ari',abs_pos:22.25,house:'First_House',retrograde:false},
+    {name:'Medium_Coeli',sign:'Cap',abs_pos:292.58,house:'Tenth_House',retrograde:false}
+  ],aspects:[],element_distribution:{fire:7,earth:4.6,air:3.5,water:2,fire_percentage:41,earth_percentage:27,air_percentage:20,water_percentage:12}};
+  chartContext='mock';
+  currentData=mockData;
+  renderResults(mockPlacements,'pt');
+  document.getElementById('state-loading').style.display='none';
+  document.getElementById('state-results').style.display='block';
+  initAITab();
 }
 
 // TABS
