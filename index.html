@@ -357,11 +357,11 @@ select.ob-input option{background:#1a1b22;}
     <div class="plan-card" id="plan-week" onclick="selectPlan('week')">
       <div class="plan-badge">3 days free</div>
       <div class="plan-period" style="margin-top:10px">Week</div>
-      <div class="plan-price">$13</div><div class="plan-unit">per week</div>
+      <div class="plan-price">$9</div><div class="plan-unit">per week</div>
     </div>
     <div class="plan-card selected" id="plan-month" onclick="selectPlan('month')">
       <div class="plan-period">Month</div>
-      <div class="plan-price">$25</div><div class="plan-unit">per month</div>
+      <div class="plan-price">$19</div><div class="plan-unit">per month</div>
     </div>
     <div class="plan-card" id="plan-annual" onclick="selectPlan('annual')">
       <div class="plan-badge">–80%</div>
@@ -426,6 +426,26 @@ select.ob-input option{background:#1a1b22;}
         </div>
       </div>
 
+      <!-- READING TAB -->
+      <div class="tab-screen" id="tab-reading">
+        <div id="reading-gate" style="display:none" class="ai-premium-gate">
+          <div class="gate-icon">◎</div>
+          <h3>Full Reading</h3>
+          <p>Your complete natal chart interpretation — identity, relationships, career, wounds.</p>
+          <button class="btn-gold" style="width:auto;padding:14px 32px;" onclick="showPage('page-paywall')">Unlock Premium →</button>
+        </div>
+        <div id="reading-content" style="display:none">
+          <div class="chart-wrap" id="reading-wrap"></div>
+        </div>
+        <div id="reading-loading" style="display:none" class="loading-full">
+          <div class="loading-orbit">
+            <svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="50" stroke="#c9a96e" stroke-width="0.8" fill="none" stroke-dasharray="4 8" opacity="0.4"/><circle cx="60" cy="10" r="4" fill="#c9a96e" opacity="0.8"/></svg>
+            <div class="loading-dot"></div>
+          </div>
+          <div class="loading-msg">Interpreting your chart...</div>
+        </div>
+      </div>
+
       <!-- MOON TAB -->
       <div class="tab-screen" id="tab-moon">
         <div class="moon-wrap">
@@ -433,6 +453,11 @@ select.ob-input option{background:#1a1b22;}
             <div class="moon-icon-big" id="moon-icon">🌕</div>
             <div class="moon-phase-name" id="moon-phase">Full Moon</div>
             <div class="moon-date-str" id="moon-date"></div>
+          </div>
+          <!-- Natal Moon interpretation -->
+          <div class="moon-card" id="natal-moon-card" style="display:none">
+            <div class="moon-card-title" id="natal-moon-title">Your Natal Moon</div>
+            <div class="moon-card-text" id="natal-moon-text" style="font-size:15px;line-height:1.75;"></div>
           </div>
           <div class="moon-card">
             <div class="moon-card-title" id="moon-sign-title">Moon in...</div>
@@ -442,30 +467,15 @@ select.ob-input option{background:#1a1b22;}
             <div class="moon-card-title">Upcoming phases</div>
             <div class="moon-phases-grid" id="moon-phases"></div>
           </div>
-          <div style="text-align:center;padding:16px 0;font-size:13px;color:var(--text-dim);font-style:italic;">Personal transits — premium feature coming soon.</div>
-        </div>
-      </div>
-
-      <!-- COMPAT TAB -->
-      <div class="tab-screen" id="tab-compat">
-        <div style="max-width:680px;margin:0 auto;padding:24px 20px 40px;">
-          <div style="font-family:'Playfair Display',serif;font-size:24px;margin-bottom:8px;">Compatibility</div>
-          <div style="font-size:14px;color:var(--text-muted);line-height:1.6;margin-bottom:24px;">How two charts interact — in love, friendship, or work.</div>
-          <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:32px 24px;text-align:center;">
-            <div style="font-size:44px;margin-bottom:14px;">♡</div>
-            <div style="font-family:'Playfair Display',serif;font-size:19px;margin-bottom:10px;">Synastry — coming soon.</div>
-            <div style="font-size:14px;color:var(--text-muted);line-height:1.7;">Enter two birth charts and Orbita shows exactly where the connection is strong, where it creates friction, and what each person brings.</div>
-            <button onclick="alert('You\'ll be notified when Compatibility launches!')" style="width:100%;background:transparent;border:1px solid var(--gold);border-radius:12px;padding:14px;font-family:'DM Sans';font-size:14px;color:var(--gold);cursor:pointer;margin-top:20px;">Notify me →</button>
-          </div>
         </div>
       </div>
 
     </div>
     <div class="tab-bar">
-      <button class="tab-item active" id="tb-chart" onclick="switchTab('chart')"><span class="tab-icon">☽</span><span class="tab-label">Birth Chart</span></button>
-      <button class="tab-item" id="tb-ai" onclick="switchTab('ai')"><span class="tab-icon">✦</span><span class="tab-label">Orbita AI</span></button>
-      <button class="tab-item" id="tb-moon" onclick="switchTab('moon')"><span class="tab-icon">◯</span><span class="tab-label">Moon</span></button>
-      <button class="tab-item" id="tb-compat" onclick="switchTab('compat')"><span class="tab-icon">♡</span><span class="tab-label">Compatibility</span></button>
+      <button class="tab-item active" id="tb-chart" onclick="switchTab('chart')"><span class="tab-icon">✦</span><span class="tab-label">Chart</span></button>
+      <button class="tab-item" id="tb-reading" onclick="switchTab('reading')"><span class="tab-icon">◎</span><span class="tab-label">Reading</span></button>
+      <button class="tab-item" id="tb-moon" onclick="switchTab('moon')"><span class="tab-icon">☽</span><span class="tab-label">Moon</span></button>
+      <button class="tab-item" id="tb-ai" onclick="switchTab('ai')"><span class="tab-icon">⬡</span><span class="tab-label">Orbita AI</span></button>
     </div>
   </div>
 </div>
@@ -627,15 +637,18 @@ function debugSkipAPI(){
   ],aspects:[],element_distribution:{fire:7,earth:4.6,air:3.5,water:2,fire_percentage:41,earth_percentage:27,air_percentage:20,water_percentage:12}};
   chartContext='mock';
   currentData=mockData;
-  renderResults(mockPlacements,'pt');
+  renderChartTab(mockPlacements,'pt');
+  renderReadingTab(mockPlacements,'pt');
   document.getElementById('state-loading').style.display='none';
   document.getElementById('state-results').style.display='block';
+  document.getElementById('reading-loading').style.display='none';
+  document.getElementById('reading-content').style.display='block';
   initAITab();
 }
 
 // TABS
 function switchTab(tab){
-  ['chart','ai','moon','compat'].forEach(t=>{
+  ['chart','reading','moon','ai'].forEach(t=>{
     document.getElementById('tab-'+t).classList.toggle('active',t===tab);
     document.getElementById('tb-'+t).classList.toggle('active',t===tab);
   });
@@ -644,6 +657,7 @@ function switchTab(tab){
 }
 
 // GENERATE CHART
+let chartSVG=null;
 async function generateChart(){
   document.getElementById('state-loading').style.display='flex';
   document.getElementById('state-error').style.display='none';
@@ -670,6 +684,7 @@ async function generateChart(){
     if(!chartResp.ok){const e=await chartResp.json();throw new Error(e.error||'Chart API error');}
     const chartJSON=await chartResp.json();
     chartRawData=chartJSON.chart_data;
+    chartSVG=chartJSON.chart_svg||null;
     chartContext=chartJSON.context||'';
 
     const planets=chartRawData.planets||[];
@@ -681,26 +696,41 @@ async function generateChart(){
       asc:asc?asc.sign:(user.birthTime?'—':'?'),ascDeg:asc?fmtDeg(asc.abs_pos):''
     };
 
-    document.getElementById('loading-text').textContent='Generating your reading...';
-
-    const lang=user.lang;
-    const sysPrompt=buildSystemPrompt(lang);
-    const uMsg=buildUserMessage(placements,lang);
-
-    const interpResp=await fetch('/api/interpret',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({system:sysPrompt,userMessage:uMsg,maxTokens:4000})});
-    if(!interpResp.ok){const e=await interpResp.json();throw new Error(e.error||'Interpretation error');}
-    const interpJSON=await interpResp.json();
-    currentData=JSON.parse(interpJSON.text.replace(/```json|```/g,'').trim());
-
-    renderResults(placements,lang);
+    // Show chart immediately
+    renderChartTab(placements, user.lang);
     document.getElementById('state-loading').style.display='none';
     document.getElementById('state-results').style.display='block';
+    initMoonNatal(moon, planets);
     initAITab();
+
+    // Load interpretation in background
+    loadReading(placements, user.lang);
 
   }catch(e){
     document.getElementById('state-loading').style.display='none';
     document.getElementById('state-error').style.display='flex';
     document.getElementById('error-msg').textContent=e.message;
+  }
+}
+
+async function loadReading(placements, lang){
+  document.getElementById('reading-loading').style.display='flex';
+  document.getElementById('reading-content').style.display='none';
+  document.getElementById('reading-gate').style.display='none';
+  try{
+    const sysPrompt=buildSystemPrompt(lang);
+    const uMsg=buildUserMessage(placements,lang);
+    const interpResp=await fetch('/api/interpret',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({system:sysPrompt,userMessage:uMsg,maxTokens:3000})});
+    if(!interpResp.ok){const e=await interpResp.json();throw new Error(e.error||'Interpretation error');}
+    const interpJSON=await interpResp.json();
+    currentData=JSON.parse(interpJSON.text.replace(/```json|```/g,'').trim());
+    renderReadingTab(placements,lang);
+    document.getElementById('reading-loading').style.display='none';
+    document.getElementById('reading-content').style.display='block';
+  }catch(e){
+    document.getElementById('reading-loading').style.display='none';
+    document.getElementById('reading-content').style.display='block';
+    document.getElementById('reading-wrap').innerHTML=`<div style="padding:20px;color:#e07070;font-size:14px;">Error loading reading: ${e.message}</div>`;
   }
 }
 
@@ -711,6 +741,15 @@ function fmtDeg(absPos){
 }
 
 function renderResults(placements,lang){
+  renderChartTab(placements,lang);
+}
+
+function translateSign(abbr){
+  const MAP={Cap:'Capricórnio',Can:'Câncer',Gem:'Gêmeos',Sag:'Sagitário',Lib:'Libra',Sco:'Escorpião',Ari:'Áries',Tau:'Touro',Leo:'Leão',Vir:'Virgem',Aqu:'Aquário',Pis:'Peixes',Aries:'Áries',Taurus:'Touro',Gemini:'Gêmeos',Cancer:'Câncer',Virgo:'Virgem',Libra:'Libra',Scorpio:'Escorpião',Sagittarius:'Sagitário',Capricorn:'Capricórnio',Aquarius:'Aquário',Pisces:'Peixes'};
+  return MAP[abbr]||abbr;
+}
+
+function renderChartTab(placements,lang){
   const wrap=document.getElementById('chart-wrap');
   const isPT=lang==='pt';
   const name=user.name||'Your Chart';
@@ -719,6 +758,74 @@ function renderResults(placements,lang){
   let td='';
   if(user.birthTime){const[h,m]=user.birthTime.split(':').map(Number);if(isPT){td=` · ${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;}else{const ap=h>=12?'PM':'AM';const h12=h%12||12;td=` · ${h12}:${String(m).padStart(2,'0')} ${ap}`;}}
 
+  const ELEM_COLOR={Cap:'#8fbf8a',Can:'#8b7fd4',Gem:'#7fb5c9',Sag:'#e07060',Lib:'#7fb5c9',Sco:'#8b7fd4',Ari:'#e07060',Tau:'#8fbf8a',Leo:'#e07060',Vir:'#8fbf8a',Aqu:'#7fb5c9',Pis:'#8b7fd4'};
+  const lunar=chartRawData?.lunar_phase||{};
+  const planets=chartRawData?.planets||[];
+  const houseCounts={};
+  planets.forEach(p=>{if(p.house)houseCounts[p.house]=(houseCounts[p.house]||0)+1;});
+  const stelliums=Object.entries(houseCounts).filter(([h,c])=>c>=3).map(([h])=>h);
+  const dist=chartRawData?.element_distribution||{};
+
+  let html=`
+  <div class="user-bar">
+    <div class="user-avatar">✦</div>
+    <div><div class="user-name-txt">${name}</div><div class="user-meta-txt">${ds}${td} · ${(user.birthCity||'').split(',')[0]}</div></div>
+  </div>`;
+
+  if(lunar.moon_phase_name){
+    html+=`<div style="margin:12px 20px 0;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:10px;">
+      <span style="font-size:22px">${lunar.moon_emoji||'🌕'}</span>
+      <div><div style="font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-dim);margin-bottom:2px">${isPT?'Lua no nascimento':'Birth moon'}</div>
+      <div style="font-size:14px;color:var(--gold)">${lunar.moon_phase_name}</div></div>
+    </div>`;
+  }
+
+  html+=`<div class="big3">
+    <div class="big3-item"><div class="big3-label">${isPT?'Sol':'Sun'}</div><div class="big3-value" style="color:${ELEM_COLOR[placements.sun]||'var(--gold)'}">${isPT?translateSign(placements.sun):placements.sun}</div><div class="big3-deg">${placements.sunDeg}</div></div>
+    <div class="big3-item"><div class="big3-label">${isPT?'Lua':'Moon'}</div><div class="big3-value" style="color:${ELEM_COLOR[placements.moon]||'var(--gold)'}">${isPT?translateSign(placements.moon):placements.moon}</div><div class="big3-deg">${placements.moonDeg}</div></div>
+    <div class="big3-item"><div class="big3-label">Rising</div><div class="big3-value" style="color:${ELEM_COLOR[placements.asc]||'var(--gold)'}">${isPT?translateSign(placements.asc):placements.asc}</div><div class="big3-deg">${placements.ascDeg}</div></div>
+  </div>`;
+
+  if(stelliums.length){
+    const hN={'First_House':'1','Second_House':'2','Third_House':'3','Fourth_House':'4','Fifth_House':'5','Sixth_House':'6','Seventh_House':'7','Eighth_House':'8','Ninth_House':'9','Tenth_House':'10','Eleventh_House':'11','Twelfth_House':'12'};
+    html+=`<div style="margin:12px 20px 0;background:rgba(201,169,110,0.08);border:1px solid rgba(201,169,110,0.2);border-radius:12px;padding:12px 16px;">
+      <div style="font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin-bottom:4px">Stellium</div>
+      <div style="font-size:13px;color:var(--text-muted)">${stelliums.map(h=>`${isPT?'Casa':'House'} ${hN[h]||h}: 3+ ${isPT?'planetas':'planets'}`).join(' · ')}</div>
+    </div>`;
+  }
+
+  if(dist.fire_percentage!==undefined){
+    const elems=[{k:'fire',label:isPT?'Fogo':'Fire',pct:dist.fire_percentage,color:'#e07060'},{k:'earth',label:isPT?'Terra':'Earth',pct:dist.earth_percentage,color:'#8fbf8a'},{k:'air',label:isPT?'Ar':'Air',pct:dist.air_percentage,color:'#7fb5c9'},{k:'water',label:isPT?'Água':'Water',pct:dist.water_percentage,color:'#8b7fd4'}];
+    html+=`<div style="margin:16px 20px 0;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 18px;">
+      <div style="font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-dim);margin-bottom:12px">${isPT?'Elementos':'Elements'}</div>`;
+    elems.forEach(e=>{html+=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;"><span style="font-size:13px;color:var(--text-muted);width:44px">${e.label}</span><div style="flex:1;height:5px;background:var(--surface2);border-radius:3px;"><div style="width:${e.pct}%;height:100%;background:${e.color};border-radius:3px;"></div></div><span style="font-size:12px;color:${e.color};width:30px;text-align:right">${e.pct}%</span></div>`;});
+    html+=`</div>`;
+  }
+
+  if(chartSVG){
+    html+=`<div style="margin:16px 20px 0;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;overflow:hidden;">
+      <div style="font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-dim);margin-bottom:12px">${isPT?'Mandala natal':'Natal mandala'}</div>
+      <div style="width:100%;aspect-ratio:1;overflow:hidden;border-radius:8px;">${chartSVG}</div>
+    </div>`;
+  }
+
+  html+=`<div class="section-block" style="margin-top:16px;">
+    <div class="section-header" onclick="toggleSection('sec-fc')">
+      <div class="section-icon" style="background:#a89bd418;color:#a89bd4">✦</div>
+      <div class="section-title">${isPT?'Mapa Completo':'Full Chart'}</div>
+      <div class="section-chevron open" id="chev-fc">▼</div>
+    </div>
+    <div class="section-body open" id="sec-fc">${buildFullChartHTML(chartRawData,isPT)}</div>
+  </div>`;
+
+  html+=`<div style="padding:20px;text-align:center;"><a href="/terms.html" target="_blank" style="font-size:12px;color:var(--text-dim);text-decoration:none;">Terms · Privacy · Disclaimer</a></div>`;
+  wrap.innerHTML=html;
+}
+
+function renderReadingTab(placements,lang){
+  const wrap=document.getElementById('reading-wrap');
+  const isPT=lang==='pt';
+  if(!currentData){wrap.innerHTML='';return;}
   const u=currentData?.universal||{};
   const sections=[
     {key:'personalidade',icon:'◎',color:'#c9a96e',label:isPT?'Personalidade':'Personality'},
@@ -726,19 +833,7 @@ function renderResults(placements,lang){
     {key:'carreira',icon:'△',color:'#7fb5c9',label:isPT?'Carreira':'Career'},
     {key:'desafios',icon:'◗',color:'#9ab87a',label:isPT?'Desafios':'Challenges'},
   ];
-
-  let html=`
-  <div class="user-bar">
-    <div class="user-avatar">✦</div>
-    <div><div class="user-name-txt">${name}</div><div class="user-meta-txt">${ds}${td} · ${(user.birthCity||'').split(',')[0]}</div></div>
-  </div>
-  <div class="big3">
-    <div class="big3-item"><div class="big3-label">${isPT?'Sol':'Sun'}</div><div class="big3-value">${placements.sun}</div><div class="big3-deg">${placements.sunDeg}</div></div>
-    <div class="big3-item"><div class="big3-label">${isPT?'Lua':'Moon'}</div><div class="big3-value">${placements.moon}</div><div class="big3-deg">${placements.moonDeg}</div></div>
-    <div class="big3-item"><div class="big3-label">Rising</div><div class="big3-value">${placements.asc}</div><div class="big3-deg">${placements.ascDeg}</div></div>
-  </div>`;
-
-  // UNIVERSAL ARCHETYPE
+  let html='';
   if(u.archetype){
     html+=`<div class="archetype-card">
       <div class="archetype-label">${isPT?'Seu arquétipo':'Your archetype'}</div>
@@ -751,64 +846,40 @@ function renderResults(placements,lang){
       </div>
     </div>`;
   }
-
-  // SECTIONS
   sections.forEach((sec,idx)=>{
     const data=currentData?.[sec.key];
     const isLocked=!isPaid&&idx>0;
-
     if(isLocked){
-      const preview=data?.[0]?.text?.substring(0,120)||'Unlock to see this section.';
-      html+=`<div class="section-block">
-        <div class="locked-section">
-          <div class="locked-blur-text">${preview}... This section reveals patterns you repeat unconsciously, what drives your decisions, and where your energy is being lost without you realizing it.</div>
-          <div class="locked-overlay">
-            <div class="lock-icon">🔒</div>
-            <div class="lock-title">${sec.label}</div>
-            <div class="lock-sub">${isPT?'Desbloqueie para ver esta área.':'Unlock to see this section.'}</div>
-            <button class="btn-unlock" onclick="showPage('page-paywall')">${isPT?'Desbloquear →':'Unlock →'}</button>
-          </div>
+      const preview=data?.[0]?.text?.substring(0,120)||'';
+      html+=`<div class="section-block"><div class="locked-section">
+        <div class="locked-blur-text">${preview}...</div>
+        <div class="locked-overlay">
+          <div class="lock-icon">🔒</div>
+          <div class="lock-title">${sec.label}</div>
+          <div class="lock-sub">${isPT?'Desbloqueie para ver esta área.':'Unlock to see this section.'}</div>
+          <button class="btn-unlock" onclick="showPage('page-paywall')">${isPT?'Desbloquear →':'Unlock →'}</button>
         </div>
-      </div>`;
+      </div></div>`;
       return;
     }
-
-    if(!data||!Array.isArray(data)){return;}
-
+    if(!data||!Array.isArray(data))return;
     html+=`<div class="section-block">
-      <div class="section-header" onclick="toggleSection('sec-${idx}')">
+      <div class="section-header" onclick="toggleSection('sec-r${idx}')">
         <div class="section-icon" style="background:${sec.color}18;color:${sec.color}">${sec.icon}</div>
         <div class="section-title">${sec.label}</div>
-        <div class="section-chevron open" id="chev-${idx}">▼</div>
+        <div class="section-chevron open" id="chev-r${idx}">▼</div>
       </div>
-      <div class="section-body open" id="sec-${idx}">
-        ${data.map(q=>`
-          <div class="q-card">
-            <div class="q-question">${q.question||''}</div>
-            <div class="q-label-wrap"><div class="q-label">${q.label||''}</div></div>
-            <div class="q-label-def">${q.label_definition||''}</div>
-            <div class="q-text">${q.text||''}</div>
-            ${q.key_placement?`<div class="q-placement">↳ ${q.key_placement}</div>`:''}
-          </div>
-        `).join('')}
+      <div class="section-body open" id="sec-r${idx}">
+        ${data.map(q=>`<div class="q-card">
+          <div class="q-question">${q.question||''}</div>
+          <div class="q-label">${q.label||''}</div>
+          <div class="q-label-def">${q.label_definition||''}</div>
+          <div class="q-text">${q.text||''}</div>
+          ${q.key_placement?`<div class="q-placement">↳ ${q.key_placement}</div>`:''}
+        </div>`).join('')}
       </div>
     </div>`;
   });
-
-  // FULL CHART DATA
-  html+=`<div class="section-block">
-    <div class="section-header" onclick="toggleSection('sec-fc')">
-      <div class="section-icon" style="background:#a89bd418;color:#a89bd4">✦</div>
-      <div class="section-title">${isPT?'Mapa Completo':'Full Chart'}</div>
-      <div class="section-chevron" id="chev-fc">▼</div>
-    </div>
-    <div class="section-body" id="sec-fc">
-      ${buildFullChartHTML(chartRawData,isPT)}
-    </div>
-  </div>`;
-
-  html+=`<div style="padding:20px;text-align:center;"><a href="/terms.html" target="_blank" style="font-size:12px;color:var(--text-dim);text-decoration:none;">Terms · Privacy · Disclaimer</a></div>`;
-
   wrap.innerHTML=html;
 }
 
@@ -947,6 +1018,45 @@ function appendAI(role,html){const msgs=document.getElementById('ai-messages');c
 function scrollAI(){const m=document.getElementById('ai-messages');setTimeout(()=>m.scrollTop=m.scrollHeight,50);}
 
 // MOON
+function initMoonNatal(moon, planets){
+  if(!moon)return;
+  const card=document.getElementById('natal-moon-card');
+  const title=document.getElementById('natal-moon-title');
+  const text=document.getElementById('natal-moon-text');
+  if(!card||!title||!text)return;
+
+  const lang=user.lang;
+  const isPT=lang==='pt';
+  const SIGN_FULL={Cap:'Capricórnio',Can:'Câncer',Gem:'Gêmeos',Sag:'Sagitário',Lib:'Libra',Sco:'Escorpião',Ari:'Áries',Tau:'Touro',Leo:'Leão',Vir:'Virgem',Aqu:'Aquário',Pis:'Peixes'};
+  const moonSign=SIGN_FULL[moon.sign]||moon.sign;
+  const hN={'First_House':'1','Second_House':'2','Third_House':'3','Fourth_House':'4','Fifth_House':'5','Sixth_House':'6','Seventh_House':'7','Eighth_House':'8','Ninth_House':'9','Tenth_House':'10','Eleventh_House':'11','Twelfth_House':'12'};
+  const moonHouse=hN[moon.house]||'';
+
+  // Find key Moon aspects
+  const aspects=chartRawData?.aspects||[];
+  const moonAspects=aspects.filter(a=>(a.p1_name==='Moon'||a.p2_name==='Moon')&&Math.abs(a.orbit||99)<=6);
+  const aspStr=moonAspects.map(a=>{
+    const other=a.p1_name==='Moon'?a.p2_name:a.p1_name;
+    return `${a.aspect} ${other}`;
+  }).slice(0,3).join(', ');
+
+  title.textContent=isPT?`Sua Lua natal — ${moonSign} Casa ${moonHouse}`:`Your natal Moon — ${moon.sign} House ${moonHouse}`;
+
+  // Generate interpretation via API
+  const sys=isPT?`Você é Orbita. Interprete a Lua natal desta pessoa em 3-4 parágrafos. Foque em: (1) necessidade emocional central, (2) como essa pessoa precisa se sentir segura, (3) o que termina seus relacionamentos sem ela perceber. Direto, comportamental, sem jargão. Sem linguagem mística.`:`You are Orbita. Interpret this person's natal Moon in 3-4 paragraphs. Focus on: (1) core emotional need, (2) what makes them feel safe, (3) what ends their relationships without them realizing. Direct, behavioral, no jargon.`;
+  const msg=`Moon: ${moon.sign}, House ${moonHouse}\nKey aspects: ${aspStr||'none'}\nChart context: ${chartContext.substring(0,1500)}`;
+
+  text.innerHTML=`<span style="color:var(--text-dim);font-style:italic">${isPT?'Interpretando sua Lua...':'Interpreting your Moon...'}</span>`;
+  card.style.display='block';
+
+  fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({system:sys,messages:[{role:'user',content:msg}],maxTokens:600})})
+    .then(r=>r.json())
+    .then(d=>{
+      text.innerHTML=d.text.split('\n\n').filter(p=>p.trim()).map(p=>`<p style="margin-bottom:12px;font-size:14px;line-height:1.75;color:var(--text-muted)">${p}</p>`).join('');
+    })
+    .catch(()=>{text.innerHTML='';card.style.display='none';});
+}
+
 function initMoon(){
   const now=new Date();
   document.getElementById('moon-date').textContent=now.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
