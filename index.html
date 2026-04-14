@@ -884,7 +884,7 @@ function renderChartTab(placements,lang){
       if(!container)return;
       container.innerHTML=chartSVG;
       const svg=container.querySelector('svg');
-      if(svg){svg.style.cssText='width:100%;height:auto;display:block;';}
+     if(svg){svg.setAttribute('width','100%');svg.setAttribute('height','auto');svg.style.cssText='width:100%;height:auto;display:block;max-width:100%;';}
     },100);
   }
 }
@@ -1008,9 +1008,8 @@ function buildAspectsHTML(raw,isPT){
   if(!raw)return'';
   const aspects=raw.aspects||[];
   const {pN,aN,ASPECT_COLORS}=getChartDicts(isPT);
-  const all=aspects.filter(a=>Math.abs(a.orbit||99)<=8).sort((a,b)=>Math.abs(a.orbit)-Math.abs(b.orbit));
-  if(!all.length)return`<div style="padding:16px 20px;font-size:13px;color:var(--text-dim)">${isPT?'Nenhum aspecto encontrado.':'No aspects found.'}</div>`;
-
+  const ORDER=['Sun','Moon','Mercury','Venus','Mars','Jupiter','Saturn','Uranus','Neptune','Pluto','Chiron','True_North_Lunar_Node','Mean_Lilith','Ascendant','Medium_Coeli'];
+const all=aspects.filter(a=>Math.abs(a.orbit||99)<=8).sort((a,b)=>(ORDER.indexOf(a.p1_name)-ORDER.indexOf(b.p1_name))||Math.abs(a.orbit)-Math.abs(b.orbit));
   let html='<div class="full-chart">';
   for(const a of all){
     const col=ASPECT_COLORS[a.aspect?.toLowerCase()]||'var(--text-muted)';
