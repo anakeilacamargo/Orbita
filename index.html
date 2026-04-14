@@ -826,12 +826,11 @@ function renderChartTab(placements,lang){
     </div>`;
   }
 
-  // MANDALA — display as image
+  // MANDALA
   if(chartSVG){
-    const encoded=btoa(unescape(encodeURIComponent(chartSVG)));
-    html+=`<div style="margin:16px 20px 0;">
-      <div style="font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-dim);margin-bottom:10px;padding:0 4px">${isPT?'Mandala natal':'Natal mandala'}</div>
-      <img src="data:image/svg+xml;base64,${encoded}" style="width:100%;border-radius:16px;background:var(--surface);border:1px solid var(--border);" />
+    html+=`<div style="margin:16px 20px 0;text-align:center;">
+      <div style="font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-dim);margin-bottom:10px;">${isPT?'Mandala natal':'Natal mandala'}</div>
+      <div id="mandala-container" style="width:100%;max-width:420px;margin:0 auto;border-radius:16px;background:var(--surface);border:1px solid var(--border);overflow:hidden;"></div>
     </div>`;
   }
 
@@ -871,9 +870,22 @@ function renderChartTab(placements,lang){
 
   html+=`<div style="padding:20px;text-align:center;"><a href="/terms.html" target="_blank" style="font-size:12px;color:var(--text-dim);text-decoration:none;">Terms · Privacy · Disclaimer</a></div>`;
   wrap.innerHTML=html;
-}
 
-function renderReadingTab(placements,lang){
+  // Inject mandala via Blob URL
+  if(chartSVG){
+    setTimeout(()=>{
+      const container=document.getElementById('mandala-container');
+      if(!container)return;
+      const blob=new Blob([chartSVG],{type:'image/svg+xml'});
+      const url=URL.createObjectURL(blob);
+      const img=document.createElement('img');
+      img.src=url;
+      img.style.cssText='width:100%;display:block;border-radius:16px;';
+      img.onload=()=>URL.revokeObjectURL(url);
+      container.appendChild(img);
+    },200);
+  }
+}
   const wrap=document.getElementById('reading-wrap');
   const isPT=lang==='pt';
   if(!currentData){wrap.innerHTML='';return;}
