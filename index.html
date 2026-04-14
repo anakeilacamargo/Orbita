@@ -618,7 +618,7 @@ async function generateChart(){
 
     const planets=chartRawData.planets||[];
     const fp=n=>planets.find(p=>p.name?.toLowerCase()===n.toLowerCase());
-    const sun=fp('Sun'),moon=fp('Moon'),houses=chartRawData.houses||[],asc=houses.find(h=>h.number===1);
+    const sun=fp('Sun'),moon=fp('Moon'),asc=fp('Ascendant');
     const placements={
       sun:sun?sun.sign:'—',sunDeg:sun?fmtDeg(sun.abs_pos):'',
       moon:moon?moon.sign:'—',moonDeg:moon?fmtDeg(moon.abs_pos):'',
@@ -788,7 +788,9 @@ function buildFullChartHTML(raw,isPT){
 
   for(const p of sorted){
     const name=pN(p.name),sign=sN(p.sign),deg=fmtDeg(p.abs_pos);
-    const house=p.house?`${isPT?'Casa':'H.'}${p.house}`:'';
+    const houseRaw=p.house||'';
+    const houseNum=houseRaw.replace('_House','').replace('First','1').replace('Second','2').replace('Third','3').replace('Fourth','4').replace('Fifth','5').replace('Sixth','6').replace('Seventh','7').replace('Eighth','8').replace('Ninth','9').replace('Tenth','10').replace('Eleventh','11').replace('Twelfth','12');
+    const house=houseNum?`${isPT?'Casa':'H.'} ${houseNum}`:'';
     const retro=p.retrograde?'℞':'';
     html+=`<div class="planet-row">
       <div class="planet-name">${name}</div>
