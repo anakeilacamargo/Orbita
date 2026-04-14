@@ -240,6 +240,7 @@ select.ob-input option{background:#1a1b22;}
     <div class="ob-spacer"></div>
     <div class="ob-dots"><div class="ob-dot active"></div><div class="ob-dot"></div><div class="ob-dot"></div><div class="ob-dot"></div><div class="ob-dot"></div><div class="ob-dot"></div><div class="ob-dot"></div><div class="ob-dot"></div></div>
     <button class="btn-gold" onclick="goSlide(1)">Get Started →</button>
+    <button onclick="debugSkipAPI()" style="background:none;border:none;color:var(--text-dim);font-size:11px;cursor:pointer;opacity:0.25;padding:8px;margin-top:4px;">⚙ test mode</button>
   </div>
   <div class="ob-slide" id="slide-1">
     <div class="ob-logo"><div class="logo-text">ORBITA</div></div>
@@ -823,7 +824,7 @@ function buildFullChartHTML(raw,isPT){
   if(!raw)return'';
   const planets=raw.planets||[];
   const aspects=raw.aspects||[];
-  const SIGN_PT={Aries:'Áries',Taurus:'Touro',Gemini:'Gêmeos',Cancer:'Câncer',Leo:'Leão',Virgo:'Virgem',Libra:'Libra',Scorpio:'Escorpião',Sagittarius:'Sagitário',Capricorn:'Capricórnio',Aquarius:'Aquário',Pisces:'Peixes'};
+  const SIGN_PT={Aries:'Áries',Taurus:'Touro',Gemini:'Gêmeos',Cancer:'Câncer',Leo:'Leão',Virgo:'Virgem',Libra:'Libra',Scorpio:'Escorpião',Sagittarius:'Sagitário',Capricorn:'Capricórnio',Aquarius:'Aquário',Pisces:'Peixes',Ari:'Áries',Tau:'Touro',Gem:'Gêmeos',Can:'Câncer',Leo:'Leão',Vir:'Virgem',Lib:'Libra',Sco:'Escorpião',Sag:'Sagitário',Cap:'Capricórnio',Aqu:'Aquário',Pis:'Peixes'};
   const PLANET_PT={'Sun':'Sol','Moon':'Lua','Mercury':'Mercúrio','Venus':'Vênus','Mars':'Marte','Jupiter':'Júpiter','Saturn':'Saturno','Uranus':'Urano','Neptune':'Netuno','Pluto':'Plutão','Chiron':'Quíron','True_North_Lunar_Node':'Nodo Norte','True_Node':'Nodo Norte','Mean_Lilith':'Lilith','Ascendant':'Ascendente','Medium_Coeli':'Meio do Céu'};
   const ASPECT_PT={conjunction:'conjunção',opposition:'oposição',trine:'trígono',square:'quadratura',sextile:'sextil',quincunx:'quincúncio'};
   const pN=n=>isPT?(PLANET_PT[n]||n):n;
@@ -1113,7 +1114,7 @@ ${isPT?'Cidade':'City'}: ${user.birthCity}
 ${isPT?'Sol':'Sun'}: ${placements.sun} ${placements.sunDeg} | ${isPT?'Lua':'Moon'}: ${placements.moon} ${placements.moonDeg} | ${isPT?'Ascendente':'Rising'}: ${placements.asc} ${placements.ascDeg}
 
 ${isPT?'Dados completos do mapa (Swiss Ephemeris):':'Full chart data (Swiss Ephemeris):'}
-${chartContext.substring(0,2000)}
+${chartContext.substring(0,3000)}
 
 ${isPT?'Retorne APENAS o JSON válido.':'Return ONLY valid JSON.'}`;
 }
