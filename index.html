@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1057,7 +1056,7 @@ ${isPT?'Cidade':'City'}: ${user.birthCity}
 ${isPT?'Sol':'Sun'}: ${placements.sun} ${placements.sunDeg} | ${isPT?'Lua':'Moon'}: ${placements.moon} ${placements.moonDeg} | ${isPT?'Ascendente':'Rising'}: ${placements.asc} ${placements.ascDeg}
 
 ${isPT?'Dados completos do mapa (Swiss Ephemeris):':'Full chart data (Swiss Ephemeris):'}
-${chartContext}
+${chartContext.substring(0,2000)}
 
 ${isPT?'Retorne APENAS o JSON válido.':'Return ONLY valid JSON.'}`;
 }
