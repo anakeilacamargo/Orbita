@@ -1,4 +1,5 @@
- <!DOCTYPE html>
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -562,10 +563,12 @@ function goPaywall(){
 // PAYWALL
 function selectPlan(p){selectedPlan=p;['week','month','annual'].forEach(id=>document.getElementById('plan-'+id).classList.toggle('selected',id===p));}
 function goPay(){
-  // Stripe links — add when ready:
-  // const links={week:'https://buy.stripe.com/xxx',month:'https://buy.stripe.com/yyy',annual:'https://buy.stripe.com/zzz'};
-  // isPaid=true; window.open(links[selectedPlan],'_blank');
-  alert('Payment coming soon!');
+  const links={
+    week:'https://buy.stripe.com/cNi4gz43e4YFdDU4sg5J600',
+    month:'https://buy.stripe.com/dRm6oHfLW62J7fw8Iw5J601',
+    annual:'https://buy.stripe.com/fZu14n9nyezf0R82k85J603'
+  };
+  window.open(links[selectedPlan],'_blank');
 }
 function launchApp(){
   showPage('page-app');
@@ -599,8 +602,8 @@ async function generateChart(){
       const d=await r.json();if(!d.length)throw new Error('Could not locate birth city.');
       lat=parseFloat(d[0].lat);lng=parseFloat(d[0].lon);
     }
-    // Timezone resolved server-side
-    const timezone='UTC';
+    const TZ_MAP={BR:'America/Sao_Paulo',US:'America/New_York',GB:'Europe/London',DE:'Europe/Berlin',FR:'Europe/Paris',IT:'Europe/Rome',ES:'Europe/Madrid',PT:'Europe/Lisbon',AR:'America/Argentina/Buenos_Aires',MX:'America/Mexico_City',CO:'America/Bogota',CL:'America/Santiago',PE:'America/Lima',JP:'Asia/Tokyo',CN:'Asia/Shanghai',IN:'Asia/Kolkata',AU:'Australia/Sydney',CA:'America/Toronto',ZA:'Africa/Johannesburg',RU:'Europe/Moscow',TR:'Europe/Istanbul',AE:'Asia/Dubai',KR:'Asia/Seoul',NG:'Africa/Lagos',EG:'Africa/Cairo',SA:'Asia/Riyadh'};
+    const timezone=TZ_MAP[user.birthNation?.toUpperCase()]||'UTC';
 
     const[year,month,day]=user.birthDate.split('-').map(Number);
     let hour=12,minute=0;
@@ -642,7 +645,7 @@ async function generateChart(){
   }catch(e){
     document.getElementById('state-loading').style.display='none';
     document.getElementById('state-error').style.display='flex';
-    document.getElementById('error-msg').textContent=e.message+' | city:'+user.birthCity+' lat:'+user.birthLat+' date:'+user.birthDate;
+    document.getElementById('error-msg').textContent=e.message;
   }
 }
 
@@ -767,8 +770,8 @@ function buildFullChartHTML(raw,isPT){
   const planets=raw.planets||[];
   const aspects=raw.aspects||[];
   const SIGN_PT={Aries:'Áries',Taurus:'Touro',Gemini:'Gêmeos',Cancer:'Câncer',Leo:'Leão',Virgo:'Virgem',Libra:'Libra',Scorpio:'Escorpião',Sagittarius:'Sagitário',Capricorn:'Capricórnio',Aquarius:'Aquário',Pisces:'Peixes'};
-  const PLANET_PT={'Sun':'Sol','Moon':'Lua','Mercury':'Mercúrio','Venus':'Vênus','Mars':'Marte','Jupiter':'Júpiter','Saturn':'Saturno','Uranus':'Urano','Neptune':'Netuno','Pluto':'Plutão','Chiron':'Quíron','True_North_Lunar_Node':'Nodo Norte','True_Node':'Nodo Norte','Mean_Node':'Nodo Norte','North_Node':'Nodo Norte','Mean_Lilith':'Lilith','True_Lilith':'Lilith','Lilith':'Lilith','Ascendant':'Ascendente','Medium_Coeli':'Meio do Céu','Descendant':'Descendente','Imum_Coeli':'Fundo do Céu'};
-  const ASPECT_PT={conjunction:'conjunção',opposition:'oposição',trine:'trígono',square:'quadratura',sextile:'sextil',quincunx:'quincúncio',semisextile:'semi-sextil',semisquare:'semi-quadratura',sesquisquare:'sesquiquadratura',sesquiquadrate:'sesquiquadratura',biquintile:'biquintil',quintile:'quintil'};
+  const PLANET_PT={'Sun':'Sol','Moon':'Lua','Mercury':'Mercúrio','Venus':'Vênus','Mars':'Marte','Jupiter':'Júpiter','Saturn':'Saturno','Uranus':'Urano','Neptune':'Netuno','Pluto':'Plutão','Chiron':'Quíron','True_North_Lunar_Node':'Nodo Norte','True_Node':'Nodo Norte','Mean_Lilith':'Lilith','Ascendant':'Ascendente','Medium_Coeli':'Meio do Céu'};
+  const ASPECT_PT={conjunction:'conjunção',opposition:'oposição',trine:'trígono',square:'quadratura',sextile:'sextil',quincunx:'quincúncio'};
   const pN=n=>isPT?(PLANET_PT[n]||n):n;
   const sN=s=>isPT?(SIGN_PT[s]||s):s;
   const aN=a=>isPT?(ASPECT_PT[a?.toLowerCase()]||a):a;
@@ -931,7 +934,7 @@ Return a single valid JSON object with exactly this structure. No markdown. No p
 
 {
   "universal": {
-    "archetype": "${lang==='pt'?'one of: O Construtor | O Transformador | O Explorador | O Guardião | O Criador | O Estrategista | O Mensageiro | O Visionário | O Guerreiro | O Curador':'one of: The Builder | The Transformer | The Explorer | The Guardian | The Creator | The Strategist | The Messenger | The Visionary | The Warrior | The Healer'}",
+    "archetype": "one of: O Construtor | O Transformador | O Explorador | O Guardião | O Criador | O Estrategista | O Mensageiro | O Visionário | O Guerreiro | O Curador",
     "archetype_definition": "one sentence defining this archetype for this specific chart",
     "text": "2-3 sentences. The central theme of this person's life based on Sun sign+house + Ascendant + North Node.",
     "key_placement": "the single most defining placement or aspect",
