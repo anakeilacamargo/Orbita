@@ -809,7 +809,7 @@ function renderChartTab(placements,lang){
 
   // Big 3
   html+=`<div class="big3">
-    <div class="big3-item"><div class="big3-label">${isPT?'Sol':'Sun'}</div><div class="big3-value">${isPT?translateSign(placements.sun):placements.sun}</div><div class="big3-deg">${placements.sunDeg}</div></div>
+    <div class="big3-item"><div class="big3-label">${isPT?'Sol':'Sun'}</div><div class="big3-value">${isPT?translateSign(placements.sun):translateSign(placements.sun)}</div><div class="big3-deg">${placements.sunDeg}</div></div>
     <div class="big3-item"><div class="big3-label">${isPT?'Lua':'Moon'}</div><div class="big3-value">${isPT?translateSign(placements.moon):placements.moon}</div><div class="big3-deg">${placements.moonDeg}</div></div>
     <div class="big3-item"><div class="big3-label">Rising</div><div class="big3-value">${isPT?translateSign(placements.asc):placements.asc}</div><div class="big3-deg">${placements.ascDeg}</div></div>
   </div>`;
@@ -833,7 +833,7 @@ function renderChartTab(placements,lang){
   }
 
   // MANDALA
-  if(false){
+  if(false){//chartSVG disabled
     html+=`<div style="margin:16px 20px 0;text-align:center;">
       <div style="font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-dim);margin-bottom:10px;">${isPT?'Mandala natal':'Natal mandala'}</div>
       <div id="mandala-container" style="width:100%;max-width:420px;margin:0 auto;border-radius:16px;background:var(--surface);border:1px solid var(--border);overflow:hidden;"></div>
@@ -878,13 +878,13 @@ function renderChartTab(placements,lang){
   wrap.innerHTML=html;
 
   // Inject mandala via DOM after render
-  if(chartSVG){
+  if(false){//chartSVG disabled
     setTimeout(()=>{
       const container=document.getElementById('mandala-container');
       if(!container)return;
       container.innerHTML=chartSVG;
       const svg=container.querySelector('svg');
-     if(svg){svg.setAttribute('width','100%');svg.setAttribute('height','auto');svg.style.cssText='width:100%;height:auto;display:block;max-width:100%;';}
+      if(svg){svg.style.cssText='width:100%;height:auto;display:block;';}
     },100);
   }
 }
@@ -1008,8 +1008,10 @@ function buildAspectsHTML(raw,isPT){
   if(!raw)return'';
   const aspects=raw.aspects||[];
   const {pN,aN,ASPECT_COLORS}=getChartDicts(isPT);
-  const ORDER=['Sun','Moon','Mercury','Venus','Mars','Jupiter','Saturn','Uranus','Neptune','Pluto','Chiron','True_North_Lunar_Node','Mean_Lilith','Ascendant','Medium_Coeli'];
-const all=aspects.filter(a=>Math.abs(a.orbit||99)<=8).sort((a,b)=>(ORDER.indexOf(a.p1_name)-ORDER.indexOf(b.p1_name))||Math.abs(a.orbit)-Math.abs(b.orbit));
+  const PLANET_ORDER=['Sun','Moon','Mercury','Venus','Mars','Jupiter','Saturn','Uranus','Neptune','Pluto','Chiron','True_North_Lunar_Node','Mean_Lilith','Ascendant','Medium_Coeli'];
+  const all=aspects.filter(a=>Math.abs(a.orbit||99)<=8).sort((a,b)=>(PLANET_ORDER.indexOf(a.p1_name)-PLANET_ORDER.indexOf(b.p1_name))||Math.abs(a.orbit)-Math.abs(b.orbit));
+  if(!all.length)return`<div style="padding:16px 20px;font-size:13px;color:var(--text-dim)">${isPT?'Nenhum aspecto encontrado.':'No aspects found.'}</div>`;
+
   let html='<div class="full-chart">';
   for(const a of all){
     const col=ASPECT_COLORS[a.aspect?.toLowerCase()]||'var(--text-muted)';
