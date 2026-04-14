@@ -446,21 +446,28 @@ select.ob-input option{background:#1a1b22;}
         </div>
       </div>
 
-      <!-- MOON TAB -->
+      <!-- MOON TAB — Natal Moon focus -->
       <div class="tab-screen" id="tab-moon">
         <div class="moon-wrap">
-          <div class="moon-header">
-            <div class="moon-icon-big" id="moon-icon">🌕</div>
-            <div class="moon-phase-name" id="moon-phase">Full Moon</div>
-            <div class="moon-date-str" id="moon-date"></div>
-          </div>
-          <!-- Natal Moon interpretation -->
+          <!-- Natal Moon — main content -->
           <div class="moon-card" id="natal-moon-card" style="display:none">
             <div class="moon-card-title" id="natal-moon-title">Your Natal Moon</div>
-            <div class="moon-card-text" id="natal-moon-text" style="font-size:15px;line-height:1.75;"></div>
+            <div class="moon-card-text" id="natal-moon-text" style="font-size:14px;line-height:1.75;"></div>
           </div>
+          <div id="natal-moon-loading" class="moon-card" style="display:none">
+            <div class="moon-card-title">☽ Sua Lua natal</div>
+            <div class="moon-card-text" style="color:var(--text-dim);font-style:italic;font-size:13px;">Interpretando sua Lua...</div>
+          </div>
+          <!-- Current moon phase -->
           <div class="moon-card">
-            <div class="moon-card-title" id="moon-sign-title">Moon in...</div>
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+              <div class="moon-icon-big" id="moon-icon" style="font-size:32px;line-height:1;">🌕</div>
+              <div>
+                <div class="moon-card-title" id="moon-phase" style="margin-bottom:2px;">Full Moon</div>
+                <div style="font-size:12px;color:var(--text-dim)" id="moon-date"></div>
+              </div>
+            </div>
+            <div class="moon-card-title" id="moon-sign-title" style="font-size:13px;color:var(--text-muted);font-weight:300;margin-bottom:6px;"></div>
             <div class="moon-card-text" id="moon-sign-text"></div>
           </div>
           <div class="moon-card">
@@ -470,12 +477,31 @@ select.ob-input option{background:#1a1b22;}
         </div>
       </div>
 
+      <!-- SKY TAB — Current planets -->
+      <div class="tab-screen" id="tab-sky">
+        <div class="moon-wrap">
+          <div class="moon-header" style="margin-bottom:16px;">
+            <div style="font-family:'Playfair Display',serif;font-size:24px;margin-bottom:6px;">Sky Now</div>
+            <div style="font-size:13px;color:var(--text-muted)" id="sky-date"></div>
+          </div>
+          <div id="sky-loading" class="moon-card">
+            <div class="moon-card-text" style="color:var(--text-dim);font-style:italic;font-size:13px;">Loading current positions...</div>
+          </div>
+          <div id="sky-content" style="display:none">
+            <div class="moon-card">
+              <div class="moon-card-title">Planets today</div>
+              <div id="sky-planets"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
     <div class="tab-bar">
       <button class="tab-item active" id="tb-chart" onclick="switchTab('chart')"><span class="tab-icon">✦</span><span class="tab-label">Chart</span></button>
       <button class="tab-item" id="tb-reading" onclick="switchTab('reading')"><span class="tab-icon">◎</span><span class="tab-label">Reading</span></button>
       <button class="tab-item" id="tb-moon" onclick="switchTab('moon')"><span class="tab-icon">☽</span><span class="tab-label">Moon</span></button>
-      <button class="tab-item" id="tb-ai" onclick="switchTab('ai')"><span class="tab-icon">⬡</span><span class="tab-label">Orbita AI</span></button>
+      <button class="tab-item" id="tb-sky" onclick="switchTab('sky')"><span class="tab-icon">★</span><span class="tab-label">Sky</span></button>
     </div>
   </div>
 </div>
@@ -648,12 +674,14 @@ function debugSkipAPI(){
 
 // TABS
 function switchTab(tab){
-  ['chart','reading','moon','ai'].forEach(t=>{
-    document.getElementById('tab-'+t).classList.toggle('active',t===tab);
-    document.getElementById('tb-'+t).classList.toggle('active',t===tab);
+  ['chart','reading','moon','sky'].forEach(t=>{
+    const tabEl=document.getElementById('tab-'+t);
+    const btnEl=document.getElementById('tb-'+t);
+    if(tabEl)tabEl.classList.toggle('active',t===tab);
+    if(btnEl)btnEl.classList.toggle('active',t===tab);
   });
   document.getElementById('app-scroll').scrollTop=0;
-  if(tab==='ai'&&isPaid) setTimeout(()=>document.getElementById('ai-input').focus(),100);
+  if(tab==='sky')loadSky();
 }
 
 // GENERATE CHART
@@ -767,11 +795,19 @@ function renderChartTab(placements,lang){
   const dist=chartRawData?.element_distribution||{};
 
   let html=`
-  <div class="user-bar">
-    <div class="user-avatar">✦</div>
-    <div><div class="user-name-txt">${name}</div><div class="user-meta-txt">${ds}${td} · ${(user.birthCity||'').split(',')[0]}</div></div>
+  <div style="text-align:center;padding:28px 20px 8px;">
+    <div style="font-family:'Playfair Display',serif;font-size:32px;color:var(--text);margin-bottom:4px;">${name}</div>
+    <div style="font-size:13px;color:var(--text-dim);">${ds}${td} · ${(user.birthCity||'').split(',')[0]}</div>
   </div>`;
 
+  // Big 3
+  html+=`<div class="big3">
+    <div class="big3-item"><div class="big3-label">${isPT?'Sol':'Sun'}</div><div class="big3-value">${isPT?translateSign(placements.sun):placements.sun}</div><div class="big3-deg">${placements.sunDeg}</div></div>
+    <div class="big3-item"><div class="big3-label">${isPT?'Lua':'Moon'}</div><div class="big3-value">${isPT?translateSign(placements.moon):placements.moon}</div><div class="big3-deg">${placements.moonDeg}</div></div>
+    <div class="big3-item"><div class="big3-label">Rising</div><div class="big3-value">${isPT?translateSign(placements.asc):placements.asc}</div><div class="big3-deg">${placements.ascDeg}</div></div>
+  </div>`;
+
+  // Lunar phase at birth
   if(lunar.moon_phase_name){
     html+=`<div style="margin:12px 20px 0;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:10px;">
       <span style="font-size:22px">${lunar.moon_emoji||'🌕'}</span>
@@ -780,12 +816,7 @@ function renderChartTab(placements,lang){
     </div>`;
   }
 
-  html+=`<div class="big3">
-    <div class="big3-item"><div class="big3-label">${isPT?'Sol':'Sun'}</div><div class="big3-value">${isPT?translateSign(placements.sun):placements.sun}</div><div class="big3-deg">${placements.sunDeg}</div></div>
-    <div class="big3-item"><div class="big3-label">${isPT?'Lua':'Moon'}</div><div class="big3-value">${isPT?translateSign(placements.moon):placements.moon}</div><div class="big3-deg">${placements.moonDeg}</div></div>
-    <div class="big3-item"><div class="big3-label">Rising</div><div class="big3-value">${isPT?translateSign(placements.asc):placements.asc}</div><div class="big3-deg">${placements.ascDeg}</div></div>
-  </div>`;
-
+  // Stellium
   if(stelliums.length){
     const hN={'First_House':'1','Second_House':'2','Third_House':'3','Fourth_House':'4','Fifth_House':'5','Sixth_House':'6','Seventh_House':'7','Eighth_House':'8','Ninth_House':'9','Tenth_House':'10','Eleventh_House':'11','Twelfth_House':'12'};
     html+=`<div style="margin:12px 20px 0;background:rgba(201,169,110,0.08);border:1px solid rgba(201,169,110,0.2);border-radius:12px;padding:12px 16px;">
@@ -794,29 +825,47 @@ function renderChartTab(placements,lang){
     </div>`;
   }
 
-  if(dist.fire_percentage!==undefined){
-    const elems=[{k:'fire',label:isPT?'Fogo':'Fire',pct:dist.fire_percentage,color:'#e07060'},{k:'earth',label:isPT?'Terra':'Earth',pct:dist.earth_percentage,color:'#8fbf8a'},{k:'air',label:isPT?'Ar':'Air',pct:dist.air_percentage,color:'#7fb5c9'},{k:'water',label:isPT?'Água':'Water',pct:dist.water_percentage,color:'#8b7fd4'}];
-    html+=`<div style="margin:16px 20px 0;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 18px;">
-      <div style="font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-dim);margin-bottom:12px">${isPT?'Elementos':'Elements'}</div>`;
-    elems.forEach(e=>{html+=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;"><span style="font-size:13px;color:var(--text-muted);width:44px">${e.label}</span><div style="flex:1;height:5px;background:var(--surface2);border-radius:3px;"><div style="width:${e.pct}%;height:100%;background:${e.color};border-radius:3px;"></div></div><span style="font-size:12px;color:${e.color};width:30px;text-align:right">${e.pct}%</span></div>`;});
-    html+=`</div>`;
-  }
-
+  // MANDALA — large, full width
   if(chartSVG){
-    html+=`<div style="margin:16px 20px 0;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;overflow:hidden;">
-      <div style="font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-dim);margin-bottom:12px">${isPT?'Mandala natal':'Natal mandala'}</div>
-      <div style="width:100%;aspect-ratio:1;overflow:hidden;border-radius:8px;">${chartSVG}</div>
+    html+=`<div style="margin:16px 20px 0;">
+      <div style="font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-dim);margin-bottom:10px;padding:0 4px">${isPT?'Mandala natal':'Natal mandala'}</div>
+      <div style="width:100%;aspect-ratio:1;overflow:hidden;border-radius:16px;background:var(--surface);border:1px solid var(--border);">${chartSVG}</div>
     </div>`;
   }
 
+  // PLANETS TABLE (collapsible, open by default)
   html+=`<div class="section-block" style="margin-top:16px;">
-    <div class="section-header" onclick="toggleSection('sec-fc')">
-      <div class="section-icon" style="background:#a89bd418;color:#a89bd4">✦</div>
-      <div class="section-title">${isPT?'Mapa Completo':'Full Chart'}</div>
-      <div class="section-chevron open" id="chev-fc">▼</div>
+    <div class="section-header" onclick="toggleSection('sec-planets')">
+      <div class="section-icon" style="background:#a89bd418;color:#a89bd4">◉</div>
+      <div class="section-title">${isPT?'Planetas':'Planets'}</div>
+      <div class="section-chevron open" id="chev-planets">▼</div>
     </div>
-    <div class="section-body open" id="sec-fc">${buildFullChartHTML(chartRawData,isPT)}</div>
+    <div class="section-body open" id="sec-planets">${buildPlanetsHTML(chartRawData,isPT)}</div>
   </div>`;
+
+  // ASPECTS (collapsible, closed by default)
+  html+=`<div class="section-block">
+    <div class="section-header" onclick="toggleSection('sec-aspects')">
+      <div class="section-icon" style="background:#d47fa618;color:#d47fa6">⚯</div>
+      <div class="section-title">${isPT?'Aspectos':'Aspects'}</div>
+      <div class="section-chevron" id="chev-aspects">▼</div>
+    </div>
+    <div class="section-body" id="sec-aspects">${buildAspectsHTML(chartRawData,isPT)}</div>
+  </div>`;
+
+  // ELEMENTS (collapsible, closed by default)
+  if(dist.fire_percentage!==undefined){
+    const elems=[{label:isPT?'Fogo':'Fire',pct:dist.fire_percentage,color:'#e07060'},{label:isPT?'Terra':'Earth',pct:dist.earth_percentage,color:'#8fbf8a'},{label:isPT?'Ar':'Air',pct:dist.air_percentage,color:'#7fb5c9'},{label:isPT?'Água':'Water',pct:dist.water_percentage,color:'#8b7fd4'}];
+    html+=`<div class="section-block">
+      <div class="section-header" onclick="toggleSection('sec-elems')">
+        <div class="section-icon" style="background:#8fbf8a18;color:#8fbf8a">◈</div>
+        <div class="section-title">${isPT?'Elementos':'Elements'}</div>
+        <div class="section-chevron" id="chev-elems">▼</div>
+      </div>
+      <div class="section-body" id="sec-elems" style="padding:0 20px 16px;">`;
+    elems.forEach(e=>{html+=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;"><span style="font-size:13px;color:var(--text-muted);width:44px">${e.label}</span><div style="flex:1;height:5px;background:var(--surface2);border-radius:3px;"><div style="width:${e.pct}%;height:100%;background:${e.color};border-radius:3px;"></div></div><span style="font-size:12px;color:${e.color};width:30px;text-align:right">${e.pct}%</span></div>`;});
+    html+=`</div></div>`;
+  }
 
   html+=`<div style="padding:20px;text-align:center;"><a href="/terms.html" target="_blank" style="font-size:12px;color:var(--text-dim);text-decoration:none;">Terms · Privacy · Disclaimer</a></div>`;
   wrap.innerHTML=html;
@@ -891,19 +940,28 @@ function toggleSection(id){
   if(chev)chev.classList.toggle('open',open);
 }
 
-function buildFullChartHTML(raw,isPT){
+function getChartDicts(isPT){
+  const SIGN_PT={Aries:'Áries',Taurus:'Touro',Gemini:'Gêmeos',Cancer:'Câncer',Leo:'Leão',Virgo:'Virgem',Libra:'Libra',Scorpio:'Escorpião',Sagittarius:'Sagitário',Capricorn:'Capricórnio',Aquarius:'Aquário',Pisces:'Peixes',Ari:'Áries',Tau:'Touro',Gem:'Gêmeos',Can:'Câncer',Vir:'Virgem',Lib:'Libra',Sco:'Escorpião',Sag:'Sagitário',Cap:'Capricórnio',Aqu:'Aquário',Pis:'Peixes'};
+  const PLANET_PT={Sun:'Sol',Moon:'Lua',Mercury:'Mercúrio',Venus:'Vênus',Mars:'Marte',Jupiter:'Júpiter',Saturn:'Saturno',Uranus:'Urano',Neptune:'Netuno',Pluto:'Plutão',Chiron:'Quíron',True_North_Lunar_Node:'Nodo Norte',True_Node:'Nodo Norte',Mean_Lilith:'Lilith',Ascendant:'Ascendente',Medium_Coeli:'Meio do Céu'};
+  const ASPECT_PT={conjunction:'conjunção',opposition:'oposição',trine:'trígono',square:'quadratura',sextile:'sextil',quincunx:'quincúncio',semisextile:'semi-sextil',semisquare:'semi-quadratura',sesquisquare:'sesquiquadratura',quintile:'quintil'};
+  const ORDER=['Sun','Moon','Mercury','Venus','Mars','Jupiter','Saturn','Uranus','Neptune','Pluto','Chiron','True_Node','True_North_Lunar_Node','Mean_Lilith','Ascendant','Medium_Coeli'];
+  const ASPECT_COLORS={conjunction:'#c9a96e',trine:'#8fbf8a',sextile:'#7fb5c9',opposition:'#e07070',square:'#e07070',quincunx:'#a89bd4',quintile:'#8b7fd4'};
+  const houseNum=h=>(h||'').replace('_House','').replace('First','1').replace('Second','2').replace('Third','3').replace('Fourth','4').replace('Fifth','5').replace('Sixth','6').replace('Seventh','7').replace('Eighth','8').replace('Ninth','9').replace('Tenth','10').replace('Eleventh','11').replace('Twelfth','12');
+  return{
+    pN:n=>isPT?(PLANET_PT[n]||n):n,
+    sN:s=>isPT?(SIGN_PT[s]||s):s,
+    aN:a=>isPT?(ASPECT_PT[a?.toLowerCase()]||a):a,
+    ORDER,ASPECT_COLORS,houseNum
+  };
+}
+
+function buildFullChartHTML(raw,isPT){return buildPlanetsHTML(raw,isPT);}
+
+function buildPlanetsHTML(raw,isPT){
   if(!raw)return'';
   const planets=raw.planets||[];
-  const aspects=raw.aspects||[];
-  const SIGN_PT={Aries:'Áries',Taurus:'Touro',Gemini:'Gêmeos',Cancer:'Câncer',Leo:'Leão',Virgo:'Virgem',Libra:'Libra',Scorpio:'Escorpião',Sagittarius:'Sagitário',Capricorn:'Capricórnio',Aquarius:'Aquário',Pisces:'Peixes',Ari:'Áries',Tau:'Touro',Gem:'Gêmeos',Can:'Câncer',Leo:'Leão',Vir:'Virgem',Lib:'Libra',Sco:'Escorpião',Sag:'Sagitário',Cap:'Capricórnio',Aqu:'Aquário',Pis:'Peixes'};
-  const PLANET_PT={'Sun':'Sol','Moon':'Lua','Mercury':'Mercúrio','Venus':'Vênus','Mars':'Marte','Jupiter':'Júpiter','Saturn':'Saturno','Uranus':'Urano','Neptune':'Netuno','Pluto':'Plutão','Chiron':'Quíron','True_North_Lunar_Node':'Nodo Norte','True_Node':'Nodo Norte','Mean_Lilith':'Lilith','Ascendant':'Ascendente','Medium_Coeli':'Meio do Céu'};
-  const ASPECT_PT={conjunction:'conjunção',opposition:'oposição',trine:'trígono',square:'quadratura',sextile:'sextil',quincunx:'quincúncio'};
-  const pN=n=>isPT?(PLANET_PT[n]||n):n;
-  const sN=s=>isPT?(SIGN_PT[s]||s):s;
-  const aN=a=>isPT?(ASPECT_PT[a?.toLowerCase()]||a):a;
-  const ORDER=['Sun','Moon','Mercury','Venus','Mars','Jupiter','Saturn','Uranus','Neptune','Pluto','Chiron','True_Node','True_North_Lunar_Node','Mean_Lilith','Ascendant','Medium_Coeli'];
+  const {pN,sN,ORDER,houseNum}=getChartDicts(isPT);
   const sorted=[...planets].sort((a,b)=>(ORDER.indexOf(a.name)===-1?99:ORDER.indexOf(a.name))-(ORDER.indexOf(b.name)===-1?99:ORDER.indexOf(b.name)));
-  const COLORS={conjunction:'#c9a96e',trine:'#8fbf8a',sextile:'#7fb5c9',opposition:'#e07070',square:'#e07070',quincunx:'#a89bd4'};
 
   let html=`<div class="full-chart">
   <div class="table-header" style="margin-top:4px;">
@@ -914,54 +972,43 @@ function buildFullChartHTML(raw,isPT){
   </div>`;
 
   for(const p of sorted){
-    const name=pN(p.name),sign=sN(p.sign),deg=fmtDeg(p.abs_pos);
-    const houseRaw=p.house||'';
-    const houseNum=houseRaw.replace('_House','').replace('First','1').replace('Second','2').replace('Third','3').replace('Fourth','4').replace('Fifth','5').replace('Sixth','6').replace('Seventh','7').replace('Eighth','8').replace('Ninth','9').replace('Tenth','10').replace('Eleventh','11').replace('Twelfth','12');
-    const house=houseNum?`${isPT?'Casa':'H.'} ${houseNum}`:'';
+    const hn=houseNum(p.house||'');
+    const house=hn?`${isPT?'Casa':'H.'} ${hn}`:'';
     const retro=p.retrograde?'℞':'';
     html+=`<div class="planet-row">
-      <div class="planet-name">${name}</div>
-      <div class="planet-sign">${sign}</div>
+      <div class="planet-name">${pN(p.name)}</div>
+      <div class="planet-sign">${sN(p.sign)}</div>
       <div class="planet-house">${house}</div>
-      <div class="planet-deg">${deg}${retro?`<span class="planet-retro"> ${retro}</span>`:''}</div>
+      <div class="planet-deg">${fmtDeg(p.abs_pos)}${retro?`<span class="planet-retro"> ${retro}</span>`:''}</div>
     </div>`;
   }
-
-  // Key aspects (orb ≤ 6)
-  const keyAspects=aspects.filter(a=>Math.abs(a.orbit||99)<=6);
-  if(keyAspects.length){
-    html+=`<div style="padding:16px 0 4px;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-dim);">${isPT?'Aspectos principais':'Key aspects'}</div>`;
-    for(const a of keyAspects){
-      const col=COLORS[a.aspect?.toLowerCase()]||'var(--text-muted)';
-      const orb=Math.abs(a.orbit)<0.5?(isPT?'exato':'exact'):`${Math.abs(a.orbit).toFixed(1)}°`;
-      html+=`<div class="aspect-row">
-        <span style="color:var(--text)">${pN(a.p1_name)}</span>
-        <span style="color:${col}">${aN(a.aspect)}</span>
-        <span style="color:var(--text)">${pN(a.p2_name)}</span>
-        <span style="color:var(--text-dim);margin-left:auto;font-size:11px;">${orb}</span>
-      </div>`;
-    }
-  }
-
-  // Element distribution
-  const dist=raw.element_distribution||raw.first_subject_planets_distributions?.element||raw.planets_distributions?.element;
-  if(dist){
-    const EPT={fire:isPT?'Fogo':'Fire',earth:isPT?'Terra':'Earth',air:isPT?'Ar':'Air',water:isPT?'Água':'Water'};
-    html+=`<div style="padding:16px 0 4px;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-dim);">${isPT?'Distribuição de elementos':'Element distribution'}</div>`;
-    for(const[k,v]of Object.entries(dist)){
-      if(typeof v!=='number'||v===0||k.includes('percentage'))continue;
-      const pct=dist[k+'_percentage']||Math.round(v/17*100);
-      html+=`<div style="display:flex;align-items:center;gap:10px;padding:6px 0;font-size:13px;">
-        <span style="color:var(--text-muted);width:50px">${EPT[k]||k}</span>
-        <div style="flex:1;height:4px;background:var(--surface2);border-radius:2px;"><div style="width:${Math.min(pct,100)}%;height:100%;background:var(--gold);border-radius:2px;"></div></div>
-        <span style="color:var(--gold);font-size:12px">${pct}%</span>
-      </div>`;
-    }
-  }
-
   html+='</div>';
   return html;
 }
+
+function buildAspectsHTML(raw,isPT){
+  if(!raw)return'';
+  const aspects=raw.aspects||[];
+  const {pN,aN,ASPECT_COLORS}=getChartDicts(isPT);
+  const all=aspects.filter(a=>Math.abs(a.orbit||99)<=8).sort((a,b)=>Math.abs(a.orbit)-Math.abs(b.orbit));
+  if(!all.length)return`<div style="padding:16px 20px;font-size:13px;color:var(--text-dim)">${isPT?'Nenhum aspecto encontrado.':'No aspects found.'}</div>`;
+
+  let html='<div class="full-chart">';
+  for(const a of all){
+    const col=ASPECT_COLORS[a.aspect?.toLowerCase()]||'var(--text-muted)';
+    const orb=Math.abs(a.orbit)<0.5?(isPT?'exato':'exact'):`${Math.abs(a.orbit).toFixed(1)}°`;
+    html+=`<div class="aspect-row">
+      <span style="color:var(--text);min-width:70px">${pN(a.p1_name)}</span>
+      <span style="color:${col};min-width:80px">${aN(a.aspect)}</span>
+      <span style="color:var(--text);flex:1">${pN(a.p2_name)}</span>
+      <span style="color:var(--text-dim);font-size:11px">${orb}</span>
+    </div>`;
+  }
+  html+='</div>';
+  return html;
+}
+
+
 
 // AI TAB
 function initAITab(){
@@ -1021,9 +1068,10 @@ function scrollAI(){const m=document.getElementById('ai-messages');setTimeout(()
 function initMoonNatal(moon, planets){
   if(!moon)return;
   const card=document.getElementById('natal-moon-card');
+  const loadingCard=document.getElementById('natal-moon-loading');
   const title=document.getElementById('natal-moon-title');
   const text=document.getElementById('natal-moon-text');
-  if(!card||!title||!text)return;
+  if(!card||!text)return;
 
   const lang=user.lang;
   const isPT=lang==='pt';
@@ -1031,30 +1079,76 @@ function initMoonNatal(moon, planets){
   const moonSign=SIGN_FULL[moon.sign]||moon.sign;
   const hN={'First_House':'1','Second_House':'2','Third_House':'3','Fourth_House':'4','Fifth_House':'5','Sixth_House':'6','Seventh_House':'7','Eighth_House':'8','Ninth_House':'9','Tenth_House':'10','Eleventh_House':'11','Twelfth_House':'12'};
   const moonHouse=hN[moon.house]||'';
-
-  // Find key Moon aspects
   const aspects=chartRawData?.aspects||[];
   const moonAspects=aspects.filter(a=>(a.p1_name==='Moon'||a.p2_name==='Moon')&&Math.abs(a.orbit||99)<=6);
-  const aspStr=moonAspects.map(a=>{
-    const other=a.p1_name==='Moon'?a.p2_name:a.p1_name;
-    return `${a.aspect} ${other}`;
-  }).slice(0,3).join(', ');
+  const aspStr=moonAspects.map(a=>{const other=a.p1_name==='Moon'?a.p2_name:a.p1_name;return`${a.aspect} ${other}`;}).slice(0,3).join(', ');
 
-  title.textContent=isPT?`Sua Lua natal — ${moonSign} Casa ${moonHouse}`:`Your natal Moon — ${moon.sign} House ${moonHouse}`;
+  if(title)title.textContent=isPT?`☽ Lua em ${moonSign}, Casa ${moonHouse}`:`☽ Moon in ${moonSign}, House ${moonHouse}`;
+  if(loadingCard)loadingCard.style.display='block';
+  card.style.display='none';
 
-  // Generate interpretation via API
-  const sys=isPT?`Você é Orbita. Interprete a Lua natal desta pessoa em 3-4 parágrafos. Foque em: (1) necessidade emocional central, (2) como essa pessoa precisa se sentir segura, (3) o que termina seus relacionamentos sem ela perceber. Direto, comportamental, sem jargão. Sem linguagem mística.`:`You are Orbita. Interpret this person's natal Moon in 3-4 paragraphs. Focus on: (1) core emotional need, (2) what makes them feel safe, (3) what ends their relationships without them realizing. Direct, behavioral, no jargon.`;
-  const msg=`Moon: ${moon.sign}, House ${moonHouse}\nKey aspects: ${aspStr||'none'}\nChart context: ${chartContext.substring(0,1500)}`;
+  const sys=isPT
+    ?`Você é Orbita. Interprete a Lua natal desta pessoa em 3 parágrafos curtos e diretos. Foque em: (1) o que ela precisa emocionalmente para se sentir segura, (2) como ela processa emoções, (3) o que termina seus relacionamentos sem ela perceber. Sem jargão, sem linguagem mística. Comportamental e específico.`
+    :`You are Orbita. Interpret this person's natal Moon in 3 short direct paragraphs. Focus on: (1) what they emotionally need to feel safe, (2) how they process emotions, (3) what ends their relationships without them realizing. No jargon, no mystical language. Behavioral and specific.`;
+  const msg=`Moon: ${moon.sign}, House ${moonHouse}\nKey aspects: ${aspStr||'none'}\nChart: ${chartContext.substring(0,1500)}`;
 
-  text.innerHTML=`<span style="color:var(--text-dim);font-style:italic">${isPT?'Interpretando sua Lua...':'Interpreting your Moon...'}</span>`;
-  card.style.display='block';
-
-  fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({system:sys,messages:[{role:'user',content:msg}],maxTokens:600})})
+  fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({system:sys,messages:[{role:'user',content:msg}],maxTokens:500})})
     .then(r=>r.json())
     .then(d=>{
+      if(loadingCard)loadingCard.style.display='none';
       text.innerHTML=d.text.split('\n\n').filter(p=>p.trim()).map(p=>`<p style="margin-bottom:12px;font-size:14px;line-height:1.75;color:var(--text-muted)">${p}</p>`).join('');
+      card.style.display='block';
     })
-    .catch(()=>{text.innerHTML='';card.style.display='none';});
+    .catch(()=>{if(loadingCard)loadingCard.style.display='none';});
+}
+
+let skyLoaded=false;
+async function loadSky(){
+  if(skyLoaded)return;
+  skyLoaded=true;
+  const now=new Date();
+  document.getElementById('sky-date').textContent=now.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+
+  // Calculate approximate current planet positions using simplified astronomy
+  // These are rough positions good enough for UX purposes
+  const jd=2451545.0+(now-new Date('2000-01-01T12:00:00Z'))/86400000;
+  const SIGNS=['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
+  const isPT=user.lang==='pt';
+  const SIGN_PT={Aries:'Áries',Taurus:'Touro',Gemini:'Gêmeos',Cancer:'Câncer',Leo:'Leão',Virgo:'Virgem',Libra:'Libra',Scorpio:'Escorpião',Sagittarius:'Sagitário',Capricorn:'Capricórnio',Aquarius:'Aquário',Pisces:'Peixes'};
+  const sN=s=>isPT?(SIGN_PT[s]||s):s;
+
+  // Simplified mean longitude calculations
+  const T=(jd-2451545)/36525;
+  const planets=[
+    {name:isPT?'Sol':'Sun',      lon:(280.46646+36000.76983*T)%360},
+    {name:isPT?'Lua':'Moon',     lon:(218.3165+481267.8813*T)%360},
+    {name:isPT?'Mercúrio':'Mercury', lon:(252.25084+149472.6746*T)%360},
+    {name:isPT?'Vênus':'Venus',  lon:(181.97973+58517.8156*T)%360},
+    {name:isPT?'Marte':'Mars',   lon:(355.43299+19140.2993*T)%360},
+    {name:isPT?'Júpiter':'Jupiter', lon:(34.35151+3034.9057*T)%360},
+    {name:isPT?'Saturno':'Saturn',  lon:(50.07744+1222.1138*T)%360},
+    {name:isPT?'Urano':'Uranus', lon:(314.05500+428.4678*T)%360},
+    {name:isPT?'Netuno':'Neptune', lon:(304.34867+218.4956*T)%360},
+    {name:isPT?'Plutão':'Pluto', lon:(238.92881+145.1781*T)%360},
+  ];
+
+  let html='';
+  for(const p of planets){
+    const lon=((p.lon%360)+360)%360;
+    const signIdx=Math.floor(lon/30);
+    const deg=Math.floor(lon%30);
+    const sign=SIGNS[signIdx];
+    const ELEM_COLOR={Aries:'#e07060',Taurus:'#8fbf8a',Gemini:'#7fb5c9',Cancer:'#8b7fd4',Leo:'#e07060',Virgo:'#8fbf8a',Libra:'#7fb5c9',Scorpio:'#8b7fd4',Sagittarius:'#e07060',Capricorn:'#8fbf8a',Aquarius:'#7fb5c9',Pisces:'#8b7fd4'};
+    html+=`<div style="display:flex;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);">
+      <div style="font-size:14px;color:var(--text);width:80px">${p.name}</div>
+      <div style="font-size:14px;color:${ELEM_COLOR[sign]||'var(--gold)'};">${sN(sign)}</div>
+      <div style="font-size:12px;color:var(--text-dim);margin-left:auto">${deg}°</div>
+    </div>`;
+  }
+
+  document.getElementById('sky-planets').innerHTML=html;
+  document.getElementById('sky-loading').style.display='none';
+  document.getElementById('sky-content').style.display='block';
 }
 
 function initMoon(){
