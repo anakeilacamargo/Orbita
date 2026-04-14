@@ -1004,7 +1004,7 @@ function buildPlanetsHTML(raw,isPT){
   return html;
 }
 
-function buildAspectsHTML(chartRawData,isPT){
+function buildAspectsHTML(raw,isPT){
   if(!raw)return'';
   const aspects=raw.aspects||[];
   const {pN,aN,ASPECT_COLORS}=getChartDicts(isPT);
