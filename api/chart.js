@@ -2,10 +2,6 @@
 // Keys live in Vercel Environment Variables, never exposed to frontend
 
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   const RAPID_KEY = process.env.RAPIDAPI_KEY;
@@ -26,14 +22,15 @@ export default async function handler(req, res) {
   };
 
   try {
-    // Fetch timezone from coordinates (server-side, no CORS issues)
-    let timezone = 'UTC';
-    try {
-      const tzResp = await fetch(`https://timeapi.io/api/TimeZone/coordinate?latitude=${subject.latitude}&longitude=${subject.longitude}`);
-      const tzData = await tzResp.json();
-      if (tzData.timeZone) timezone = tzData.timeZone;
-    } catch {}
-    subject.timezone = timezone;
+    // Resolve timezone server-side using coordinates (no CORS issues here)
+    if (!subject.timezone || subject.timezone === 'UTC') {
+      try {
+        const tzResp = await fetch(`https://timeapi.io/api/TimeZone/coordinate?latitude=${subject.latitude}&longitude=${subject.longitude}`);
+        const tzData = await tzResp.json();
+        if (tzData.timeZone) subject.timezone = tzData.timeZone;
+      } catch {}
+    }
+
     // Fetch chart + context in parallel
     const [chartResp, ctxResp] = await Promise.all([
       fetch('https://astrologer.p.rapidapi.com/api/v5/chart/birth-chart', {
@@ -59,8 +56,14 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Astrologer API error', detail: chartData });
     }
 
+    // Normalize: build planets[] array from direct fields
+    const cd = chartData.chart_data;
+    const PLANET_KEYS = ['sun','moon','mercury','venus','mars','jupiter','saturn','uranus','neptune','pluto','chiron','true_north_lunar_node','mean_lilith','ascendant','medium_coeli'];
+    const planets = PLANET_KEYS.map(k => cd[k]).filter(Boolean);
+    cd.planets = planets;
+
     return res.status(200).json({
-      chart_data: chartData.chart_data,
+      chart_data: cd,
       context: ctxData.context || '',
     });
 
