@@ -1,6 +1,3 @@
-// /api/chart.js — fetches birth chart + context in parallel
-// Keys live in Vercel Environment Variables, never exposed to frontend
-
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
@@ -22,7 +19,7 @@ export default async function handler(req, res) {
   };
 
   try {
-    // Resolve timezone server-side using coordinates (no CORS issues here)
+    // Timezone server-side
     if (!subject.timezone || subject.timezone === 'UTC') {
       try {
         const tzResp = await fetch(`https://timeapi.io/api/TimeZone/coordinate?latitude=${subject.latitude}&longitude=${subject.longitude}`);
@@ -64,6 +61,7 @@ export default async function handler(req, res) {
 
     return res.status(200).json({
       chart_data: cd,
+      chart_svg: chartData.chart || null,  // mandala SVG
       context: ctxData.context || '',
     });
 
