@@ -1012,7 +1012,7 @@ function buildAspectsHTML(raw,isPT){
   if(!raw)return'';
   const aspects=raw.aspects||[];
   const {pN,aN,ASPECT_COLORS}=getChartDicts(isPT);
-  const PLANET_ORDER=['Sun','Moon','Mercury','Venus','Mars','Jupiter','Saturn','Uranus','Neptune','Pluto','Chiron','True_North_Lunar_Node','Mean_Lilith','Ascendant','Medium_Coeli'];
+  let html='<div class="full-chart" style="margin-top:8px">';
   const all=aspects.filter(a=>Math.abs(a.orbit||99)<=8).sort((a,b)=>(PLANET_ORDER.indexOf(a.p1_name)-PLANET_ORDER.indexOf(b.p1_name))||Math.abs(a.orbit)-Math.abs(b.orbit));
   if(!all.length)return`<div style="padding:16px 20px;font-size:13px;color:var(--text-dim)">${isPT?'Nenhum aspecto encontrado.':'No aspects found.'}</div>`;
 
