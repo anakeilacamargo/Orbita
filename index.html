@@ -983,14 +983,10 @@ function buildPlanetsHTML(raw,isPT){
 
   let html=`<div class="full-chart">
   <div class="table-header" style="margin-top:4px;">
-<span style="flex:1.2">${isPT?'Planeta':'Planet'}</span>
-    <span style="flex:1.3">${isPT?'Signo':'Sign'}</span>
-    <span style="flex:0.8">${isPT?'Casa':'House'}</span>
-    <span style="flex:0.8;text-align:right">${isPT?'Grau':'Degree'}</span>
-  </div>`;
-  <span style="flex:1.3">${isPT?'Signo':'Sign'}</span>
-  <span style="flex:0.8">${isPT?'Casa':'House'}</span>
-  <span style="flex:0.8;text-align:right">${isPT?'Grau':'Degree'}</span>
+    <span style="width:80px">${isPT?'Planeta':'Planet'}</span>
+    <span style="width:100px">${isPT?'Signo':'Sign'}</span>
+    <span style="width:60px">${isPT?'Casa':'House'}</span>
+    <span style="margin-left:auto">${isPT?'Grau':'Degree'}</span>
   </div>`;
 
   for(const p of sorted){
@@ -1012,7 +1008,7 @@ function buildAspectsHTML(raw,isPT){
   if(!raw)return'';
   const aspects=raw.aspects||[];
   const {pN,aN,ASPECT_COLORS}=getChartDicts(isPT);
-  let html='<div class="full-chart" style="margin-top:8px">';
+  const PLANET_ORDER=['Sun','Moon','Mercury','Venus','Mars','Jupiter','Saturn','Uranus','Neptune','Pluto','Chiron','True_North_Lunar_Node','Mean_Lilith','Ascendant','Medium_Coeli'];
   const all=aspects.filter(a=>Math.abs(a.orbit||99)<=8).sort((a,b)=>(PLANET_ORDER.indexOf(a.p1_name)-PLANET_ORDER.indexOf(b.p1_name))||Math.abs(a.orbit)-Math.abs(b.orbit));
   if(!all.length)return`<div style="padding:16px 20px;font-size:13px;color:var(--text-dim)">${isPT?'Nenhum aspecto encontrado.':'No aspects found.'}</div>`;
 
@@ -1253,7 +1249,6 @@ Your tone is direct, precise, and slightly cold — never vague, never preachy. 
 Never use: "journey", "energy", "vibe", "resonate", "healing journey", "toxic", "red flag", "oracular", "sacred", "cosmic", "mystical", "shadow work", "portal", "awakening", "soul", "universe".
 Every sentence must describe observable behavior or a specific planetary configuration. No metaphors. No poetic language. If it sounds like an Instagram caption, cut it.
 Never exceed 3 sentences per text field.
-Every insight must move the person toward self-understanding — not just describe behavior, but show the unconscious pattern behind it and what becomes possible when they see it clearly. Tone: wise, precise, warm without being soft. Like a brilliant therapist who uses few words and hits the exact nerve — not to hurt, but to illuminate. Structure: [what they do] + [why they really do it] + [what changes when they understand this]. The goal is not to describe the person — it is to dismantle their blind spots gently enough that they don't close before they understand. Example: "Lua em Gêmeos oposta Plutão: você analisa o que sente em vez de sentir — porque sentir sem entender parece perigoso. Quando você aceitar que nem tudo precisa fazer sentido para ser real, vai parar de se afastar de você mesma." Never vague. Never generic. Never advice-column tone. If a sentence could apply to anyone, rewrite it. Never use "indica que", "sugere que", "aponta para".
 
 Respond entirely in ${langLabel}.
 
