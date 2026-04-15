@@ -637,6 +637,7 @@ async function saveUserProfile(chartData,chartCtx){
 }
 
 // Init auth on load
+window.addEventListener('load', initAuth);
 initAuth();
 // STARS
 const starsEl=document.getElementById('stars');
