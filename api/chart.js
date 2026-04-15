@@ -53,10 +53,11 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Astrologer API error', detail: chartData });
     }
 
-    // Normalize: build planets[] array from direct fields
+    // Normalize: build planets[] array from subject fields (API v5 format)
     const cd = chartData.chart_data;
+    const src = cd.subject || cd; // planets are inside subject in v5
     const PLANET_KEYS = ['sun','moon','mercury','venus','mars','jupiter','saturn','uranus','neptune','pluto','chiron','true_north_lunar_node','mean_lilith','ascendant','medium_coeli'];
-    const planets = PLANET_KEYS.map(k => cd[k]).filter(Boolean);
+    const planets = PLANET_KEYS.map(k => src[k]).filter(Boolean);
     cd.planets = planets;
 
     return res.status(200).json({
