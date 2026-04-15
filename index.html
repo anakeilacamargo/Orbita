@@ -619,27 +619,7 @@ function launchApp(){
   initMoon();
   initAITab();
   setTimeout(showReview,45000);
-  // Try to load cached chart
-  try{
-    const cached=JSON.parse(localStorage.getItem('orbita_chart')||'null');
-    if(cached&&cached.chartRawData&&cached.user?.birthDate===user.birthDate){
-      chartRawData=cached.chartRawData;
-      chartSVG=cached.chartSVG||null;
-      chartContext=cached.chartContext||'';
-      const planets=chartRawData.planets||[];
-      const fp=n=>planets.find(p=>p.name?.toLowerCase()===n.toLowerCase());
-      const sun=fp('Sun'),moon=fp('Moon'),asc=fp('Ascendant');
-      const placements={sun:sun?sun.sign:'—',sunDeg:sun?fmtDeg(sun.abs_pos):'',moon:moon?moon.sign:'—',moonDeg:moon?fmtDeg(moon.abs_pos):'',asc:asc?asc.sign:'—',ascDeg:asc?fmtDeg(asc.abs_pos):''};
-      renderChartTab(placements,user.lang);
-      document.getElementById('state-loading').style.display='none';
-      document.getElementById('state-results').style.display='block';
-      initMoonNatal(moon,planets);
-      loadReading(placements,user.lang);
-      return;
-    }
-  }catch{}
   generateChart();
-}
 }
 
 // DEBUG: skip API, use mock data (remove before launch)
@@ -741,7 +721,6 @@ async function generateChart(){
     chartRawData=chartJSON.chart_data;
     chartSVG=chartJSON.chart_svg||null;
     chartContext=chartJSON.context||'';
-    try{localStorage.setItem('orbita_chart',JSON.stringify({chartRawData,chartSVG,chartContext,user,placements:null}));}catch{}
 
     const planets=chartRawData.planets||[];
     const fp=n=>planets.find(p=>p.name?.toLowerCase()===n.toLowerCase());
@@ -854,7 +833,7 @@ function renderChartTab(placements,lang){
   }
 
   // MANDALA
-if(false){
+  if(false){//chartSVG disabled
     html+=`<div style="margin:16px 20px 0;text-align:center;">
       <div style="font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-dim);margin-bottom:10px;">${isPT?'Mandala natal':'Natal mandala'}</div>
       <div id="mandala-container" style="width:100%;max-width:420px;margin:0 auto;border-radius:16px;background:var(--surface);border:1px solid var(--border);overflow:hidden;"></div>
@@ -878,7 +857,7 @@ if(false){
       <div class="section-title">${isPT?'Aspectos':'Aspects'}</div>
       <div class="section-chevron open" id="chev-aspects">▼</div>
     </div>
-   <div class="section-body" id="sec-aspects">${buildAspectsHTML(chartRawData,isPT)}</div>
+    <div class="section-body open" id="sec-aspects">${buildAspectsHTML(chartRawData,isPT)}</div>
   </div>`;
 
   // ELEMENTS (collapsible, closed by default)
@@ -1003,11 +982,11 @@ function buildPlanetsHTML(raw,isPT){
   const sorted=[...planets].sort((a,b)=>(ORDER.indexOf(a.name)===-1?99:ORDER.indexOf(a.name))-(ORDER.indexOf(b.name)===-1?99:ORDER.indexOf(b.name)));
 
   let html=`<div class="full-chart">
- <div class="table-header" style="margin-top:4px;display:flex;">
-    <span style="width:80px">${isPT?'Planeta':'Planet'}</span>
-    <span style="width:100px">${isPT?'Signo':'Sign'}</span>
-    <span style="width:60px">${isPT?'Casa':'House'}</span>
-    <span style="margin-left:auto">${isPT?'Grau':'Degree'}</span>
+  <div class="table-header" style="margin-top:4px;">
+   <span style="flex:1.2">${isPT?'Planeta':'Planet'}</span>
+  <span style="flex:1.3">${isPT?'Signo':'Sign'}</span>
+  <span style="flex:0.8">${isPT?'Casa':'House'}</span>
+  <span style="flex:0.8;text-align:right">${isPT?'Grau':'Degree'}</span>
   </div>`;
 
   for(const p of sorted){
