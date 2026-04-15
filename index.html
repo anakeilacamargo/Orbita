@@ -1229,11 +1229,43 @@ function initMoonNatal(moon, planets){
 
 let skyLoaded=false;
 async function loadSky(){
-  if(skyLoaded)return;
-  skyLoaded=true;
-  const now=new Date();
-  document.getElementById('sky-date').textContent=now.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+if(skyLoaded)return;
+skyLoaded=true;
+const now=new Date();
+document.getElementById(‘sky-date’).textContent=now.toLocaleDateString(‘en-US’,{weekday:‘long’,month:‘long’,day:‘numeric’,year:‘numeric’});
 
+const isPT=user.lang===‘pt’;
+const SIGN_PT={Aries:‘Áries’,Taurus:‘Touro’,Gemini:‘Gêmeos’,Cancer:‘Câncer’,Leo:‘Leão’,Virgo:‘Virgem’,Libra:‘Libra’,Scorpio:‘Escorpião’,Sagittarius:‘Sagitário’,Capricorn:‘Capricórnio’,Aquarius:‘Aquário’,Pisces:‘Peixes’};
+const NAME_PT={Sun:‘Sol’,Moon:‘Lua’,Mercury:‘Mercúrio’,Venus:‘Vênus’,Mars:‘Marte’,Jupiter:‘Júpiter’,Saturn:‘Saturno’,Uranus:‘Urano’,Neptune:‘Netuno’,Pluto:‘Plutão’,‘True North Node’:‘Nodo Norte’};
+const sN=s=>isPT?(SIGN_PT[s]||s):s;
+const pN=n=>isPT?(NAME_PT[n]||n):n;
+
+const ELEM_COLOR={Aries:’#e07060’,Taurus:’#8fbf8a’,Gemini:’#7fb5c9’,Cancer:’#8b7fd4’,Leo:’#e07060’,Virgo:’#8fbf8a’,Libra:’#7fb5c9’,Scorpio:’#8b7fd4’,Sagittarius:’#e07060’,Capricorn:’#8fbf8a’,Aquarius:’#7fb5c9’,Pisces:’#8b7fd4’};
+
+try {
+const resp = await fetch(’/api/sky’);
+const data = await resp.json();
+
+```
+if (!data.planets || !data.planets.length) throw new Error('No planet data');
+
+let html='';
+for(const p of data.planets){
+  const sign = p.sign || '';
+  const deg = p.degree ?? '';
+  const rx = p.retrograde ? ' <span style="color:var(--text-dim);font-size:11px;">Rx</span>' : '';
+  html+=`<div style="display:flex;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);">
+    <div style="font-size:14px;color:var(--text);flex:1.2">${pN(p.name)}</div>
+    <div style="font-size:14px;color:${ELEM_COLOR[sign]||'var(--gold)'};">${sN(sign)}${rx}</div>
+    <div style="font-size:12px;color:var(--text-dim);margin-left:auto">${deg}°</div>
+  </div>`;
+}
+document.getElementById('sky-planets').innerHTML=html;
+```
+
+} catch(e) {
+document.getElementById(‘sky-planets’).innerHTML=`<div style="color:var(--text-dim);font-size:13px;padding:12px 0;">Could not load current positions.</div>`;
+}
   // Calculate approximate current planet positions using simplified astronomy
   // These are rough positions good enough for UX purposes
   const jd=2451545.0+(now-new Date('2000-01-01T12:00:00Z'))/86400000;
