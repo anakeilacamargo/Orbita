@@ -810,7 +810,7 @@ function renderChartTab(placements,lang){
   // Big 3
   html+=`<div class="big3">
     <div class="big3-item"><div class="big3-label">${isPT?'Sol':'Sun'}</div><div class="big3-value">${isPT?translateSign(placements.sun):translateSign(placements.sun)}</div><div class="big3-deg">${placements.sunDeg}</div></div>
-    <div class="big3-item"><div class="big3-label">${isPT?'Lua':'Moon'}</div><div class="big3-value">${isPT?translateSign(placements.moon):placements.moon}</div><div class="big3-deg">${placements.moonDeg}</div></div>
+    <div class="big3-item"><div class="big3-label">${isPT?'Lua':'Moon'}</div><div class="big3-value">${translateSign(placements.moon)}</div><div class="big3-deg">${placements.moonDeg}</div></div>
     <div class="big3-item"><div class="big3-label">Rising</div><div class="big3-value">${isPT?translateSign(placements.asc):placements.asc}</div><div class="big3-deg">${placements.ascDeg}</div></div>
   </div>`;
 
@@ -913,39 +913,36 @@ function renderReadingTab(placements,lang){
       </div>
     </div>`;
   }
-  sections.forEach((sec,idx)=>{
+
+  // ADJECTIVES
+  if(u.adjectives&&u.adjectives.length){
+    html+='<div style="margin:0 20px;display:flex;flex-wrap:wrap;gap:8px;padding:12px 0;">';
+    u.adjectives.forEach(a=>{html+='<span style="background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:5px 14px;font-size:13px;color:var(--text-muted)">'+a+'</span>';});
+    html+='</div>';
+  }
+
+  sections.forEach(function(sec,idx){
     const data=currentData?.[sec.key];
-    const isLocked=false; // unlock all for now
-    if(isLocked){
-      const preview=data?.[0]?.text?.substring(0,120)||'';
-      html+=`<div class="section-block"><div class="locked-section">
-        <div class="locked-blur-text">${preview}...</div>
-        <div class="locked-overlay">
-          <div class="lock-icon">🔒</div>
-          <div class="lock-title">${sec.label}</div>
-          <div class="lock-sub">${isPT?'Desbloqueie para ver esta área.':'Unlock to see this section.'}</div>
-          <button class="btn-unlock" onclick="showPage('page-paywall')">${isPT?'Desbloquear →':'Unlock →'}</button>
-        </div>
-      </div></div>`;
-      return;
-    }
+    const isLocked=false;
     if(!data||!Array.isArray(data))return;
-    html+=`<div class="section-block">
-      <div class="section-header" onclick="toggleSection('sec-r${idx}')">
-        <div class="section-icon" style="background:${sec.color}18;color:${sec.color}">${sec.icon}</div>
-        <div class="section-title">${sec.label}</div>
-        <div class="section-chevron open" id="chev-r${idx}">▼</div>
-      </div>
-      <div class="section-body open" id="sec-r${idx}">
-        ${data.map(q=>`<div class="q-card">
-          <div class="q-question">${q.question||''}</div>
-          <div class="q-label">${q.label||''}</div>
-          <div class="q-label-def">${q.label_definition||''}</div>
-          <div class="q-text">${q.text||''}</div>
-          ${q.key_placement?`<div class="q-placement">↳ ${q.key_placement}</div>`:''}
-        </div>`).join('')}
-      </div>
-    </div>`;
+    html+='<div class="section-block">';
+    html+='<div class="section-header" onclick="toggleSection(\'sec-r'+idx+'\')">';
+    html+='<div class="section-icon" style="background:'+sec.color+'18;color:'+sec.color+'">'+sec.icon+'</div>';
+    html+='<div class="section-title">'+sec.label+'</div>';
+    html+='<div class="section-chevron open" id="chev-r'+idx+'">▼</div>';
+    html+='</div>';
+    html+='<div class="section-body open" id="sec-r'+idx+'">';
+    data.forEach(function(q){
+      html+='<div class="q-card">';
+      html+='<div class="q-question">'+(q.question||'')+'</div>';
+      html+='<div class="q-label">'+(q.label||'')+'</div>';
+      html+='<div class="q-label-def">'+(q.label_definition||'')+'</div>';
+      html+='<div class="q-text">'+(q.text||'')+'</div>';
+      if(q.key_placement)html+='<div class="q-placement">↳ '+q.key_placement+'</div>';
+      if(q.teaser)html+='<div style="margin-top:14px;padding:12px 14px;background:rgba(201,169,110,0.06);border-left:2px solid var(--gold);border-radius:0 8px 8px 0;font-size:13px;color:var(--text-muted);font-style:italic;">'+q.teaser+'</div>';
+      html+='</div>';
+    });
+    html+='</div></div>';
   });
   wrap.innerHTML=html;
 }
@@ -982,11 +979,11 @@ function buildPlanetsHTML(raw,isPT){
   const sorted=[...planets].sort((a,b)=>(ORDER.indexOf(a.name)===-1?99:ORDER.indexOf(a.name))-(ORDER.indexOf(b.name)===-1?99:ORDER.indexOf(b.name)));
 
   let html=`<div class="full-chart">
-  <div class="table-header" style="margin-top:4px;">
-    <span style="width:80px">${isPT?'Planeta':'Planet'}</span>
-    <span style="width:100px">${isPT?'Signo':'Sign'}</span>
-    <span style="width:60px">${isPT?'Casa':'House'}</span>
-    <span style="margin-left:auto">${isPT?'Grau':'Degree'}</span>
+  <div class="table-header" style="margin-top:4px;display:flex;">
+    <span style="flex:1.2">${isPT?'Planeta':'Planet'}</span>
+    <span style="flex:1.3">${isPT?'Signo':'Sign'}</span>
+    <span style="flex:0.8">${isPT?'Casa':'House'}</span>
+    <span style="flex:0.8;text-align:right">${isPT?'Grau':'Degree'}</span>
   </div>`;
 
   for(const p of sorted){
@@ -1262,7 +1259,9 @@ Return a single valid JSON object with exactly this structure. No markdown. No p
     "archetype_definition": "one sentence defining this archetype for this specific chart",
     "text": "2-3 sentences. The central theme of this person's life based on Sun sign+house + Ascendant + North Node.",
     "key_placement": "the single most defining placement or aspect",
-    "chart_signature": "dominant element + dominant modality, e.g. Earth-Cardinal"
+      "teaser": "A provocative question this person needs to sit with — specific to this placement and chart. No answer. Just the question."
+    "chart_signature": "dominant element + dominant modality, e.g. Earth-Cardinal",
+    "adjectives": ["5-7 precise adjectives that describe this specific person based on their chart. Not generic. Examples: ambiciosa, dispersa, intensa, analítica, impulsiva, leal, contraditória"]
   },
   "personalidade": [
     {
@@ -1271,7 +1270,9 @@ Return a single valid JSON object with exactly this structure. No markdown. No p
       "label": "one of: Alinhado | Máscara protetora | Contradição produtiva | Divisão profunda",
       "label_definition": "one sentence defining this label in plain language",
       "text": "2-3 sentences comparing Ascendant with Sun and Moon.",
-      "key_placement": "most relevant placement"
+      "key_placement": "most relevant placement",
+      "teaser": "A provocative question this person needs to sit with — specific to this placement and chart. No answer. Just the question."
+      "teaser": "A provocative question this person needs to sit with — something they've never been asked but immediately recognizes as true about themselves. No answer. Just the question."
     },
     {
       "question_id": "natal_p2",
@@ -1280,6 +1281,7 @@ Return a single valid JSON object with exactly this structure. No markdown. No p
       "label_definition": "one sentence defining this label",
       "text": "2-3 sentences focused on Moon sign and house.",
       "key_placement": "Moon placement + key aspect"
+      "teaser": "A provocative question this person needs to sit with — specific to this placement and chart. No answer. Just the question."
     },
     {
       "question_id": "natal_p3",
@@ -1288,6 +1290,7 @@ Return a single valid JSON object with exactly this structure. No markdown. No p
       "label_definition": "one sentence defining this label",
       "text": "2-3 sentences focused on Mercury sign, house, and aspects.",
       "key_placement": "Mercury placement"
+      "teaser": "A provocative question this person needs to sit with — specific to this placement and chart. No answer. Just the question."
     }
   ],
   "relacionamentos": [
@@ -1298,6 +1301,7 @@ Return a single valid JSON object with exactly this structure. No markdown. No p
       "label_definition": "one sentence",
       "text": "2-3 sentences on Descendant, 7th house ruler, Venus.",
       "key_placement": "Descendant + Venus"
+      "teaser": "A provocative question this person needs to sit with — specific to this placement and chart. No answer. Just the question."
     },
     {
       "question_id": "natal_r2",
@@ -1306,6 +1310,7 @@ Return a single valid JSON object with exactly this structure. No markdown. No p
       "label_definition": "one sentence",
       "text": "2-3 sentences on Venus aspects, Moon aspects, 8th house.",
       "key_placement": "key Venus or Moon aspect"
+      "teaser": "A provocative question this person needs to sit with — specific to this placement and chart. No answer. Just the question."
     },
     {
       "question_id": "natal_r3",
@@ -1314,6 +1319,7 @@ Return a single valid JSON object with exactly this structure. No markdown. No p
       "label_definition": "one sentence",
       "text": "2-3 sentences on Mars sign, house, Pluto aspects.",
       "key_placement": "Mars + 8th house ruler"
+      "teaser": "A provocative question this person needs to sit with — specific to this placement and chart. No answer. Just the question."
     }
   ],
   "carreira": [
@@ -1324,6 +1330,7 @@ Return a single valid JSON object with exactly this structure. No markdown. No p
       "label_definition": "one sentence",
       "text": "2-3 sentences on Midheaven, 10th house ruler, North Node, Sun house.",
       "key_placement": "Midheaven + North Node"
+      "teaser": "A provocative question this person needs to sit with — specific to this placement and chart. No answer. Just the question."
     },
     {
       "question_id": "natal_c2",
@@ -1332,6 +1339,7 @@ Return a single valid JSON object with exactly this structure. No markdown. No p
       "label_definition": "one sentence",
       "text": "2-3 sentences on 6th house, Saturn placement, dominant modality.",
       "key_placement": "6th house ruler + Saturn"
+      "teaser": "A provocative question this person needs to sit with — specific to this placement and chart. No answer. Just the question."
     },
     {
       "question_id": "natal_c3",
@@ -1340,6 +1348,7 @@ Return a single valid JSON object with exactly this structure. No markdown. No p
       "label_definition": "one sentence",
       "text": "2-3 sentences on Saturn aspects, South Node, 10th house tensions.",
       "key_placement": "Saturn aspects + South Node"
+      "teaser": "A provocative question this person needs to sit with — specific to this placement and chart. No answer. Just the question."
     }
   ],
   "desafios": [
@@ -1350,6 +1359,7 @@ Return a single valid JSON object with exactly this structure. No markdown. No p
       "label_definition": "one sentence",
       "text": "2-3 sentences on Chiron sign+house, Saturn aspects, 4th house.",
       "key_placement": "Chiron + Saturn aspect"
+      "teaser": "A provocative question this person needs to sit with — specific to this placement and chart. No answer. Just the question."
     },
     {
       "question_id": "natal_d2",
@@ -1358,6 +1368,7 @@ Return a single valid JSON object with exactly this structure. No markdown. No p
       "label_definition": "one sentence",
       "text": "2-3 sentences on South Node, Moon aspects, repetitive patterns.",
       "key_placement": "South Node + Moon aspect"
+      "teaser": "A provocative question this person needs to sit with — specific to this placement and chart. No answer. Just the question."
     },
     {
       "question_id": "natal_d3",
@@ -1366,6 +1377,7 @@ Return a single valid JSON object with exactly this structure. No markdown. No p
       "label_definition": "one sentence",
       "text": "2-3 sentences on North Node and underutilized planets.",
       "key_placement": "North Node + unaspected planet"
+      "teaser": "A provocative question this person needs to sit with — specific to this placement and chart. No answer. Just the question."
     }
   ]
 }`;
