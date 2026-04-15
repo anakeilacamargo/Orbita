@@ -619,7 +619,27 @@ function launchApp(){
   initMoon();
   initAITab();
   setTimeout(showReview,45000);
+  // Try to load cached chart
+  try{
+    const cached=JSON.parse(localStorage.getItem('orbita_chart')||'null');
+    if(cached&&cached.chartRawData&&cached.user?.birthDate===user.birthDate){
+      chartRawData=cached.chartRawData;
+      chartSVG=cached.chartSVG||null;
+      chartContext=cached.chartContext||'';
+      const planets=chartRawData.planets||[];
+      const fp=n=>planets.find(p=>p.name?.toLowerCase()===n.toLowerCase());
+      const sun=fp('Sun'),moon=fp('Moon'),asc=fp('Ascendant');
+      const placements={sun:sun?sun.sign:'—',sunDeg:sun?fmtDeg(sun.abs_pos):'',moon:moon?moon.sign:'—',moonDeg:moon?fmtDeg(moon.abs_pos):'',asc:asc?asc.sign:'—',ascDeg:asc?fmtDeg(asc.abs_pos):''};
+      renderChartTab(placements,user.lang);
+      document.getElementById('state-loading').style.display='none';
+      document.getElementById('state-results').style.display='block';
+      initMoonNatal(moon,planets);
+      loadReading(placements,user.lang);
+      return;
+    }
+  }catch{}
   generateChart();
+}
 }
 
 // DEBUG: skip API, use mock data (remove before launch)
@@ -721,6 +741,7 @@ async function generateChart(){
     chartRawData=chartJSON.chart_data;
     chartSVG=chartJSON.chart_svg||null;
     chartContext=chartJSON.context||'';
+    try{localStorage.setItem('orbita_chart',JSON.stringify({chartRawData,chartSVG,chartContext,user,placements:null}));}catch{}
 
     const planets=chartRawData.planets||[];
     const fp=n=>planets.find(p=>p.name?.toLowerCase()===n.toLowerCase());
@@ -982,7 +1003,7 @@ function buildPlanetsHTML(raw,isPT){
   const sorted=[...planets].sort((a,b)=>(ORDER.indexOf(a.name)===-1?99:ORDER.indexOf(a.name))-(ORDER.indexOf(b.name)===-1?99:ORDER.indexOf(b.name)));
 
   let html=`<div class="full-chart">
-  <div class="table-header" style="margin-top:4px;">
+ <div class="table-header" style="margin-top:4px;display:flex;">
     <span style="width:80px">${isPT?'Planeta':'Planet'}</span>
     <span style="width:100px">${isPT?'Signo':'Sign'}</span>
     <span style="width:60px">${isPT?'Casa':'House'}</span>
