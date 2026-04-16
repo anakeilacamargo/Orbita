@@ -1233,8 +1233,7 @@ async function loadSky(){
 if(skyLoaded)return;
 skyLoaded=true;
 const now=new Date();
-document.getElementById(‘sky-date’).textContent=now.toLocaleDateString('en-US',{weekday:‘long’,month:‘long’,day:‘numeric’,year:‘numeric’});
-
+document.getElementById('sky-date').textContent=now.toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric",year:"numeric"});
 const isPT=user.lang===‘pt’;
 const SIGN_PT={Aries:‘Áries’,Taurus:‘Touro’,Gemini:‘Gêmeos’,Cancer:‘Câncer’,Leo:‘Leão’,Virgo:‘Virgem’,Libra:‘Libra’,Scorpio:‘Escorpião’,Sagittarius:‘Sagitário’,Capricorn:‘Capricórnio’,Aquarius:‘Aquário’,Pisces:‘Peixes’};
 const NAME_PT={Sun:‘Sol’,Moon:‘Lua’,Mercury:‘Mercúrio’,Venus:‘Vênus’,Mars:‘Marte’,Jupiter:‘Júpiter’,Saturn:‘Saturno’,Uranus:‘Urano’,Neptune:‘Netuno’,Pluto:‘Plutão’,‘True North Node’:‘Nodo Norte’};
