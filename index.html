@@ -1247,7 +1247,6 @@ try {
 const resp = await fetch(’/api/sky’);
 const data = await resp.json();
 
-```
 if (!data.planets || !data.planets.length) throw new Error('No planet data');
 
 let html='';
@@ -1262,8 +1261,7 @@ for(const p of data.planets){
   </div>`;
 }
 document.getElementById('sky-planets').innerHTML=html;
-```
-
+  
 } catch(e) {
 document.getElementById(‘sky-planets’).innerHTML=`<div style="color:var(--text-dim);font-size:13px;padding:12px 0;">Could not load current positions.</div>`;
 }
