@@ -1,0 +1,56 @@
+export default async function handler(req, res) {
+  if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
+
+  const RAPID_KEY = process.env.RAPIDAPI_KEY;
+  if (!RAPID_KEY) return res.status(500).json({ error: 'API key not configured' });
+
+  const now = new Date();
+  const subject = {
+    name: 'Sky',
+    year: now.getUTCFullYear(),
+    month: now.getUTCMonth() + 1,
+    day: now.getUTCDate(),
+    hour: now.getUTCHours(),
+    minute: now.getUTCMinutes(),
+    latitude: 0,
+    longitude: 0,
+    timezone: 'UTC',
+    city: 'UTC',
+  };
+
+  const ACTIVE_POINTS = [
+    'Sun','Moon','Mercury','Venus','Mars','Jupiter','Saturn',
+    'Uranus','Neptune','Pluto','True_Node',
+  ];
+
+  const headers = {
+    'Content-Type': 'application/json',
+    'X-RapidAPI-Host': 'astrologer.p.rapidapi.com',
+    'X-RapidAPI-Key': RAPID_KEY,
+  };
+
+  try {
+    const resp = await fetch('https://astrologer.p.rapidapi.com/api/v5/context/birth-chart', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ subject, active_points: ACTIVE_POINTS }),
+    });
+
+    const data = await resp.json();
+
+    // Extract planet positions from response
+    const src = data?.context?.subject || data?.subject || {};
+    const PLANET_KEYS = ['sun','moon','mercury','venus','mars','jupiter','saturn','uranus','neptune','pluto','true_north_lunar_node'];
+    const planets = PLANET_KEYS.map(k => src[k]).filter(Boolean).map(p => ({
+      name: p.name,
+      sign: p.sign?.name || p.sign,
+      degree: p.position ? Math.floor(p.position) : null,
+      retrograde: p.retrograde || false,
+    }));
+
+    return res.status(200).json({ planets, timestamp: now.toISOString() });
+
+  } catch (e) {
+    return res.status(500).json({ error: e.message });
+  }
+}
