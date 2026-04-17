@@ -38,15 +38,29 @@ export default async function handler(req, res) {
 
     const data = await resp.json();
 
-    // Extract planet positions from response
-    const src = data?.context?.subject || data?.subject || {};
-    const PLANET_KEYS = ['sun','moon','mercury','venus','mars','jupiter','saturn','uranus','neptune','pluto','true_north_lunar_node'];
-    const planets = PLANET_KEYS.map(k => src[k]).filter(Boolean).map(p => ({
-      name: p.name,
-      sign: p.sign?.name || p.sign,
-      degree: p.position ? Math.floor(p.position) : null,
-      retrograde: p.retrograde || false,
-    }));
+    // Try all known paths for v5 API
+    const src = data?.context?.subject
+      || data?.subject
+      || data?.chart_data?.subject
+      || data?.data?.subject
+      || {};
+
+    const PLANET_KEYS = ['sun','moon','mercury','venus','mars','jupiter','saturn','uranus','neptune','pluto','true_north_lunar_node','true_node'];
+
+    const planets = PLANET_KEYS
+      .map(k => src[k])
+      .filter(Boolean)
+      .map(p => ({
+        name: p.name,
+        sign: p.sign?.name || p.sign,
+        degree: p.position !== undefined ? Math.floor(p.position % 30) : (p.abs_pos !== undefined ? Math.floor(p.abs_pos % 30) : null),
+        retrograde: p.retrograde || false,
+      }));
+
+    // If still empty, return raw for debugging
+    if (!planets.length) {
+      return res.status(200).json({ planets: [], debug_keys: Object.keys(src), timestamp: now.toISOString() });
+    }
 
     return res.status(200).json({ planets, timestamp: now.toISOString() });
 
