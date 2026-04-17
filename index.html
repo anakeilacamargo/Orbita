@@ -997,11 +997,11 @@ async function loadSky(){
   const now=new Date();
   document.getElementById('sky-date').textContent=now.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
   const isPT=user.lang==='pt';
-  const SIGN_PT={Aries:'\xc1ries',Taurus:'Touro',Gemini:'G\xeameos',Cancer:'C\xe2ncer',Leo:'Le\xe3o',Virgo:'Virgem',Libra:'Libra',Scorpio:'Escorpi\xe3o',Sagittarius:'Sagit\xe1rio',Capricorn:'Capric\xf3rnio',Aquarius:'Aqu\xe1rio',Pisces:'Peixes'};
-  const NAME_PT={Sun:'Sol',Moon:'Lua',Mercury:'Merc\xfario',Venus:'V\xeanus',Mars:'Marte',Jupiter:'J\xfapiter',Saturn:'Saturno',Uranus:'Urano',Neptune:'Netuno',Pluto:'Plut\xe3o','True North Node':'Nodo Norte'};
+  const SIGN_PT={Aries:'\xc1ries',Ari:'\xc1ries',Taurus:'Touro',Tau:'Touro',Gemini:'G\xeameos',Gem:'G\xeameos',Cancer:'C\xe2ncer',Can:'C\xe2ncer',Leo:'Le\xe3o',Virgo:'Virgem',Vir:'Virgem',Libra:'Libra',Lib:'Libra',Scorpio:'Escorpi\xe3o',Sco:'Escorpi\xe3o',Sagittarius:'Sagit\xe1rio',Sag:'Sagit\xe1rio',Capricorn:'Capric\xf3rnio',Cap:'Capric\xf3rnio',Aquarius:'Aqu\xe1rio',Aqu:'Aqu\xe1rio',Pisces:'Peixes',Pis:'Peixes'};
+  const NAME_PT={Sun:'Sol',Moon:'Lua',Mercury:'Merc\xfario',Venus:'V\xeanus',Mars:'Marte',Jupiter:'J\xfapiter',Saturn:'Saturno',Uranus:'Urano',Neptune:'Netuno',Pluto:'Plut\xe3o','True North Node':'Nodo Norte',True_North_Lunar_Node:'Nodo Norte'};
   const sN=s=>isPT?(SIGN_PT[s]||s):s;
   const pN=n=>isPT?(NAME_PT[n]||n):n;
-  const ELEM_COLOR={Aries:'#e07060',Taurus:'#8fbf8a',Gemini:'#7fb5c9',Cancer:'#8b7fd4',Leo:'#e07060',Virgo:'#8fbf8a',Libra:'#7fb5c9',Scorpio:'#8b7fd4',Sagittarius:'#e07060',Capricorn:'#8fbf8a',Aquarius:'#7fb5c9',Pisces:'#8b7fd4'};
+ const ELEM_COLOR={Aries:'#e07060',Ari:'#e07060',Taurus:'#8fbf8a',Tau:'#8fbf8a',Gemini:'#7fb5c9',Gem:'#7fb5c9',Cancer:'#8b7fd4',Can:'#8b7fd4',Leo:'#e07060',Virgo:'#8fbf8a',Vir:'#8fbf8a',Libra:'#7fb5c9',Lib:'#7fb5c9',Scorpio:'#8b7fd4',Sco:'#8b7fd4',Sagittarius:'#e07060',Sag:'#e07060',Capricorn:'#8fbf8a',Cap:'#8fbf8a',Aquarius:'#7fb5c9',Aqu:'#7fb5c9',Pisces:'#8b7fd4',Pis:'#8b7fd4'};
   try{
     const resp=await fetch('/api/sky');
     const data=await resp.json();
