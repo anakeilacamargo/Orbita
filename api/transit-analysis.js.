@@ -1,0 +1,116 @@
+export default async function handler(req, res) {
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+
+  const ANTHROPIC_KEY = process.env.ANTHROPIC_KEY;
+  if (!ANTHROPIC_KEY) return res.status(500).json({ error: 'API key not configured' });
+
+  const { transitContext, natalContext, lang, name } = req.body;
+  if (!transitContext) return res.status(400).json({ error: 'Missing transitContext' });
+
+  const isPT = lang === 'pt';
+
+  const system = isPT ? `Você é Orbita, um motor de análise astrológica especializado em trânsitos.
+
+Sua função: analisar os aspectos de trânsito e retornar uma análise estruturada, direta e comportamental.
+
+REGRAS:
+- Foque apenas nos aspectos mais significativos (orbe menor que 3° para conjunções/oposições/quadraturas, menor que 4° para trígonos/sextis)
+- Ignore aspectos com planetas lentos entre si (ex: Netuno trígono Urano — sem impacto imediato)
+- Priorize: planetas pesados transitando sobre pontos sensíveis natais (Sol, Lua, Ascendente, Meio do Céu, Vênus, Marte)
+- Classifique por duração: CURTO (dias), MÉDIO (semanas), LONGO (meses)
+- Linguagem: comportamental, direta, zero jargão místico
+- Cada trânsito tem: título, descrição de 1-2 frases do que isso significa na prática, e uma ação concreta
+
+Retorne APENAS JSON válido. Sem markdown. Sem preâmbulo.
+
+Estrutura:
+{
+  "summary": "1 frase sobre o momento geral desta pessoa agora",
+  "transits": [
+    {
+      "id": "unique_id",
+      "title": "Nome do trânsito (ex: Saturno quadratura Sol natal)",
+      "duration": "curto" | "medio" | "longo" | "terminando",
+      "intensity": "alta" | "media" | "baixa",
+      "description": "O que este trânsito significa na prática para esta pessoa específica. Comportamental, concreto.",
+      "action": "Uma ação direta e específica que ela pode tomar hoje."
+    }
+  ],
+  "questions": [
+    "Pergunta clicável 1 — baseada nos trânsitos mais ativos",
+    "Pergunta clicável 2",
+    "Pergunta clicável 3",
+    "Pergunta clicável 4"
+  ]
+}` : `You are Orbita, an astrology analysis engine specialized in transits.
+
+Your function: analyze transit aspects and return a structured, direct, behavioral analysis.
+
+RULES:
+- Focus only on the most significant aspects (orb under 3° for conjunctions/oppositions/squares, under 4° for trines/sextiles)
+- Ignore slow planet aspects between themselves (ex: Neptune trine Uranus — no immediate impact)
+- Prioritize: heavy planets transiting over sensitive natal points (Sun, Moon, Ascendant, Midheaven, Venus, Mars)
+- Classify by duration: SHORT (days), MEDIUM (weeks), LONG (months)
+- Language: behavioral, direct, zero mystical jargon
+- Each transit has: title, 1-2 sentence description of what this means in practice, and a concrete action
+
+Return ONLY valid JSON. No markdown. No preamble.
+
+Structure:
+{
+  "summary": "1 sentence about this person's general moment right now",
+  "transits": [
+    {
+      "id": "unique_id",
+      "title": "Transit name (ex: Saturn square natal Sun)",
+      "duration": "short" | "medium" | "long" | "ending",
+      "intensity": "high" | "medium" | "low",
+      "description": "What this transit means in practice for this specific person. Behavioral, concrete.",
+      "action": "One direct and specific action they can take today."
+    }
+  ],
+  "questions": [
+    "Clickable question 1 — based on most active transits",
+    "Clickable question 2",
+    "Clickable question 3",
+    "Clickable question 4"
+  ]
+}`;
+
+  const userMsg = `${isPT ? 'Nome' : 'Name'}: ${name || 'User'}
+${isPT ? 'Dados de trânsito (aspectos entre planetas de hoje e mapa natal):' : 'Transit data (aspects between today\'s planets and natal chart):'}
+${transitContext.substring(0, 6000)}
+
+${natalContext ? `${isPT ? 'Contexto natal adicional:' : 'Additional natal context:'}
+${natalContext.substring(0, 1000)}` : ''}
+
+${isPT ? 'Retorne APENAS o JSON.' : 'Return ONLY the JSON.'}`;
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': ANTHROPIC_KEY,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: 'claude-opus-4-5',
+        max_tokens: 2000,
+        system,
+        messages: [{ role: 'user', content: userMsg }],
+      }),
+    });
+
+    const data = await response.json();
+    if (!response.ok) return res.status(response.status).json({ error: data.error?.message || 'Anthropic error' });
+    if (!data.content || !data.content[0]) return res.status(500).json({ error: 'Empty response' });
+
+    const text = data.content[0].text.replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(text);
+    return res.status(200).json(parsed);
+
+  } catch (e) {
+    return res.status(500).json({ error: e.message });
+  }
+}
