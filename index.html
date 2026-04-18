@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -31,7 +30,6 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-sans);font-we
 @keyframes twinkle{from{opacity:var(--min-o);}to{opacity:var(--max-o);}}
 .page{display:none;position:fixed;inset:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;z-index:10;background:var(--bg);}
 .page.active{display:block;}
-
 /* ONBOARDING */
 .ob-slide{display:none;flex-direction:column;min-height:100vh;padding:60px 32px 48px;}
 .ob-slide.active{display:flex;animation:fadeUp 0.35s ease;}
@@ -64,7 +62,6 @@ select.ob-input option{background:#1a1b22;}
 .aths-num{width:28px;height:28px;border-radius:50%;background:var(--gold-dim);border:1px solid rgba(201,169,110,0.3);color:var(--gold);font-size:13px;font-weight:500;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
 .aths-text{font-size:14px;color:var(--text-muted);line-height:1.55;}
 .aths-text strong{color:var(--text);font-weight:400;}
-
 /* PAYWALL */
 .pw-hero{padding:56px 28px 24px;text-align:center;}
 .pw-logo{font-family:var(--font-serif);font-size:26px;letter-spacing:0.12em;color:var(--gold);margin-bottom:18px;}
@@ -87,7 +84,6 @@ select.ob-input option{background:#1a1b22;}
 .pw-legal a{color:var(--text-dim);text-decoration:underline;}
 .pw-free-link{text-align:center;padding:0 20px 32px;}
 .pw-free-link button{background:none;border:none;color:var(--text-dim);font-family:var(--font-sans);font-size:14px;cursor:pointer;text-decoration:underline;}
-
 /* APP */
 .app-wrap{display:flex;flex-direction:column;height:100vh;}
 .app-scroll{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;}
@@ -99,7 +95,6 @@ select.ob-input option{background:#1a1b22;}
 .tab-screen{display:none;}
 .tab-screen.active{display:block;}
 #tab-ai.active{display:flex;flex-direction:column;height:100%;}
-
 /* LOADING */
 .loading-full{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:80vh;text-align:center;padding:40px 20px;}
 .loading-orbit{width:100px;height:100px;margin:0 auto 28px;position:relative;}
@@ -108,21 +103,18 @@ select.ob-input option{background:#1a1b22;}
 .loading-dot{position:absolute;top:50%;left:50%;width:8px;height:8px;background:var(--gold);border-radius:50%;transform:translate(-50%,-50%);animation:pulse 2s ease-in-out infinite;}
 @keyframes pulse{0%,100%{opacity:0.4;transform:translate(-50%,-50%) scale(0.8);}50%{opacity:1;transform:translate(-50%,-50%) scale(1.2);}}
 .loading-msg{font-size:15px;color:var(--text-muted);font-style:italic;}
-
 /* CHART RESULTS */
 .chart-wrap{max-width:680px;margin:0 auto;padding:0 0 40px;}
 .user-bar{display:flex;align-items:center;gap:12px;padding:20px 20px 0;}
 .user-avatar{width:40px;height:40px;border-radius:50%;background:var(--gold-dim);border:1px solid rgba(201,169,110,0.3);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
 .user-name-txt{font-family:var(--font-serif);font-size:18px;}
 .user-meta-txt{font-size:12px;color:var(--text-muted);}
-
 /* BIG 3 */
 .big3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:16px 20px 0;}
 .big3-item{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 12px;text-align:center;}
 .big3-label{font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-dim);margin-bottom:4px;}
 .big3-value{font-size:15px;color:var(--gold);font-weight:400;}
 .big3-deg{font-size:11px;color:var(--text-dim);margin-top:2px;}
-
 /* UNIVERSAL ARCHETYPE */
 .archetype-card{margin:20px 20px 0;background:linear-gradient(135deg,rgba(201,169,110,0.08),rgba(201,169,110,0.03));border:1px solid rgba(201,169,110,0.25);border-radius:16px;padding:24px 20px;}
 .archetype-label{font-size:10px;letter-spacing:0.25em;text-transform:uppercase;color:var(--gold);margin-bottom:8px;}
@@ -132,7 +124,6 @@ select.ob-input option{background:#1a1b22;}
 .archetype-sig{display:flex;gap:10px;flex-wrap:wrap;}
 .sig-pill{background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:5px 12px;font-size:12px;color:var(--text-muted);}
 .sig-pill span{color:var(--gold);}
-
 /* SECTION BLOCKS */
 .section-block{margin:16px 20px 0;}
 .section-header{display:flex;align-items:center;gap:10px;margin-bottom:14px;cursor:pointer;}
@@ -142,7 +133,6 @@ select.ob-input option{background:#1a1b22;}
 .section-chevron.open{transform:rotate(180deg);}
 .section-body{display:none;}
 .section-body.open{display:block;}
-
 /* QUESTION CARDS */
 .q-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 18px 14px;margin-bottom:10px;}
 .q-question{font-size:13px;color:var(--text-dim);margin-bottom:10px;font-style:italic;}
@@ -151,7 +141,6 @@ select.ob-input option{background:#1a1b22;}
 .q-label-def{font-size:12px;color:var(--text-muted);line-height:1.5;margin-bottom:10px;}
 .q-text{font-size:14px;line-height:1.72;font-weight:300;color:var(--text);}
 .q-placement{font-size:11px;color:var(--text-dim);margin-top:8px;font-style:italic;}
-
 /* FULL CHART TABLE */
 .full-chart{padding:0 20px;}
 .planet-row{display:flex;align-items:center;gap:0;padding:13px 0;border-bottom:1px solid var(--border);}
@@ -165,7 +154,6 @@ select.ob-input option{background:#1a1b22;}
 .table-header span{font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:var(--text-dim);}
 .aspect-row{display:flex;align-items:center;gap:0;padding:11px 0;border-bottom:1px solid var(--border);font-size:13px;}
 .aspect-row:last-child{border-bottom:none;}
-
 /* LOCKED */
 .locked-section{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:28px 20px;text-align:center;margin-bottom:10px;position:relative;overflow:hidden;}
 .locked-blur-text{filter:blur(5px);opacity:0.3;pointer-events:none;font-size:14px;line-height:1.7;color:var(--text-muted);margin-bottom:16px;user-select:none;}
@@ -174,7 +162,6 @@ select.ob-input option{background:#1a1b22;}
 .lock-title{font-family:var(--font-serif);font-size:16px;margin-bottom:6px;}
 .lock-sub{font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.5;}
 .btn-unlock{background:var(--gold);border:none;border-radius:10px;padding:11px 24px;font-family:var(--font-sans);font-size:13px;font-weight:500;color:#08090d;cursor:pointer;}
-
 /* AI TAB */
 .ai-header{padding:20px 20px 14px;border-bottom:1px solid var(--border);flex-shrink:0;}
 .ai-header-title{font-family:var(--font-serif);font-size:20px;color:var(--gold);}
@@ -199,7 +186,6 @@ select.ob-input option{background:#1a1b22;}
 .ai-premium-gate .gate-icon{font-size:40px;margin-bottom:16px;}
 .ai-premium-gate h3{font-family:var(--font-serif);font-size:22px;margin-bottom:10px;}
 .ai-premium-gate p{font-size:14px;color:var(--text-muted);line-height:1.6;margin-bottom:24px;}
-
 /* MOON */
 .moon-wrap{max-width:680px;margin:0 auto;padding:24px 20px 40px;}
 .moon-header{text-align:center;margin-bottom:28px;}
@@ -214,7 +200,6 @@ select.ob-input option{background:#1a1b22;}
 .phase-icon{font-size:22px;margin-bottom:6px;}
 .phase-name{font-size:9px;color:var(--text-dim);letter-spacing:0.08em;text-transform:uppercase;line-height:1.3;}
 .phase-date{font-size:11px;color:var(--text-muted);margin-top:3px;}
-
 /* MODAL */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:200;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.3s;}
 .modal-overlay.visible{opacity:1;pointer-events:all;}
@@ -229,7 +214,6 @@ select.ob-input option{background:#1a1b22;}
 .modal-star.lit{filter:none;transform:scale(1.15);}
 .btn-modal-skip{width:100%;background:none;border:none;color:var(--text-dim);font-family:var(--font-sans);font-size:14px;cursor:pointer;padding:10px;}
 </style>
-
 </head>
 <body>
 <div class="stars" id="stars"></div>
@@ -491,37 +475,42 @@ select.ob-input option{background:#1a1b22;}
     </div>
   </div>
 
-  <!-- SKY TAB -->
+<!-- TRANSITS TAB -->
   <div class="tab-screen" id="tab-sky">
     <div class="moon-wrap">
-      <div class="moon-header" style="margin-bottom:16px;">
-        <div style="font-family:var(--font-serif);font-size:24px;margin-bottom:6px;">Sky Now</div>
+      <div style="padding:8px 0 16px;">
+        <div style="font-family:var(--font-serif);font-size:24px;margin-bottom:4px;" id="transit-title">Trânsitos</div>
         <div style="font-size:13px;color:var(--text-muted)" id="sky-date"></div>
       </div>
-      <div id="sky-loading" class="moon-card">
-        <div class="moon-card-text" style="color:var(--text-dim);font-style:italic;font-size:13px;">Loading current positions...</div>
+      <div id="transit-loading" class="moon-card">
+        <div class="moon-card-text" style="color:var(--text-dim);font-style:italic;font-size:13px;">Calculando seus trânsitos...</div>
       </div>
-      <div id="sky-content" style="display:none">
-        <div class="moon-card">
-          <div class="moon-card-title">Planets today</div>
-          <div id="sky-planets"></div>
+      <div id="transit-content" style="display:none">
+        <div id="transit-summary" class="moon-card" style="background:linear-gradient(135deg,rgba(201,169,110,0.08),rgba(201,169,110,0.03));border:1px solid rgba(201,169,110,0.25);"></div>
+        <div class="moon-card" id="transit-questions-card" style="display:none">
+          <div class="moon-card-title" id="transit-questions-title">O que você quer entender?</div>
+          <div id="transit-questions" style="display:flex;flex-direction:column;gap:8px;margin-top:4px;"></div>
+        </div>
+        <div id="transit-answer-card" class="moon-card" style="display:none">
+          <div id="transit-answer-text" style="font-size:14px;line-height:1.75;color:var(--text-muted);"></div>
         </div>
         <div class="moon-card">
-          <div class="moon-card-title">Key aspects today</div>
-          <div id="sky-aspects"></div>
+          <div class="moon-card-title" id="transit-list-title">Trânsitos ativos</div>
+          <div id="transit-list"></div>
+        </div>
+        <div class="moon-card">
+          <div class="moon-card-title" id="sky-planets-title">Planetas hoje</div>
+          <div id="sky-planets"></div>
         </div>
       </div>
     </div>
   </div>
-
 </div>
 <div class="tab-bar">
   <button class="tab-item active" id="tb-chart" onclick="switchTab('chart')"><span class="tab-icon">&#10022;</span><span class="tab-label">Chart</span></button>
   <button class="tab-item" id="tb-reading" onclick="switchTab('reading')"><span class="tab-icon">&#9678;</span><span class="tab-label">Reading</span></button>
   <button class="tab-item" id="tb-moon" onclick="switchTab('moon')"><span class="tab-icon">&#9789;</span><span class="tab-label">Moon</span></button>
-  <button class="tab-item" id="tb-sky" onclick="switchTab('sky')"><span class="tab-icon">&#9733;</span><span class="tab-label">Sky</span></button>
-</div>
-  </div>
+  <button class="tab-item" id="tb-sky" onclick="switchTab('sky')"><span class="tab-icon">&#9642;</span><span class="tab-label">Trânsitos</span></button>
 </div>
 
 <!-- REVIEW MODAL -->
