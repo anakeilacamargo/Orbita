@@ -1032,31 +1032,62 @@ async function loadSky(){
 
     const analysisResp=await fetch('/api/transit-analysis',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({transitContext:transitData.context||'',natalContext:chartContext||'',lang:user.lang,name:user.name})});
     const analysis=await analysisResp.json();
+    const isPT2=user.lang==='pt';
 
-    if(analysis.summary){
-      document.getElementById('transit-summary').innerHTML='<div style="font-size:14px;line-height:1.7;color:var(--text);">'+analysis.summary+'</div>';
+    function transitCard(t,accent){
+      const aColor={conjunção:'#c9a96e',conjunction:'#c9a96e',oposição:'#e07070',opposition:'#e07070',quadratura:'#e07070',square:'#e07070',trígono:'#8fbf8a',trine:'#8fbf8a',sextil:'#7fb5c9',sextile:'#7fb5c9'}[t.aspect?.toLowerCase()]||'var(--gold)';
+      return '<div style="margin-bottom:14px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 16px 12px;">'
+        +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">'
+        +(accent?'<span style="width:6px;height:6px;border-radius:50%;background:'+accent+';flex-shrink:0;display:inline-block;"></span>':'')
+        +'<span style="font-size:13px;font-weight:500;color:var(--text);">'+t.title+'</span>'
+        +(t.orb?'<span style="font-size:10px;color:var(--text-dim);margin-left:auto;">'+parseFloat(t.orb).toFixed(1)+'\xb0</span>':'')
+        +'</div>'
+        +'<div style="font-size:13px;color:var(--text-muted);line-height:1.65;margin-bottom:10px;">'+t.description+'</div>'
+        +'<div style="font-size:12px;color:var(--gold);padding:8px 10px;background:rgba(201,169,110,0.06);border-radius:8px;border-left:2px solid var(--gold);">\u2192 '+t.action+'</div>'
+        +'</div>';
     }
 
-    if(analysis.questions&&analysis.questions.length){
-      document.getElementById('transit-questions').innerHTML=analysis.questions.map(q=>'<button onclick="askTransitQuestion('+JSON.stringify(q)+')" style="text-align:left;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;font-family:var(--font-sans);font-size:13px;color:var(--text-muted);cursor:pointer;width:100%;">'+q+'</button>').join('');
+    // MAIS IMPORTANTE
+    if(analysis.mais_importante){
+      const mi=analysis.mais_importante;
+      document.getElementById('transit-summary').innerHTML=
+        '<div style="font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin-bottom:10px;">'+(isPT2?'Mais importante agora':'Most important now')+'</div>'
+        +'<div style="font-size:15px;font-weight:500;color:var(--text);margin-bottom:8px;">'+mi.title+'</div>'
+        +'<div style="font-size:13px;color:var(--text-muted);line-height:1.7;margin-bottom:10px;">'+mi.description+'</div>'
+        +'<div style="font-size:12px;color:var(--gold);padding:8px 10px;background:rgba(201,169,110,0.06);border-radius:8px;border-left:2px solid var(--gold);">\u2192 '+mi.action+'</div>';
+    }
+
+    // COMO ESTÁ VENDO A VIDA
+    const vida=analysis.como_esta_vendo_a_vida;
+    if(vida){
       document.getElementById('transit-questions-card').style.display='block';
+      document.getElementById('transit-questions-title').textContent=isPT2?'Como voc\xea est\xe1 vendo a vida':'How you are seeing life';
+      document.getElementById('transit-questions').innerHTML=
+        '<div style="font-size:22px;font-weight:300;color:var(--gold);margin-bottom:8px;">'+vida.humor+'</div>'
+        +'<div style="font-size:13px;color:var(--text-muted);line-height:1.7;margin-bottom:10px;">'+vida.filtro+'</div>'
+        +'<div style="font-size:12px;color:#e07070;padding:8px 10px;background:rgba(224,112,96,0.06);border-radius:8px;border-left:2px solid #e07070;margin-bottom:12px;">\u26a0 '+vida.cuidado+'</div>'
+        +'<div style="font-size:12px;color:var(--text-dim);margin-bottom:8px;letter-spacing:0.1em;text-transform:uppercase;">'+(isPT2?'Perguntas':'Questions')+'</div>'
+        +(vida.perguntas||[]).map(q=>'<button onclick="askTransitQuestion('+JSON.stringify(q)+')" style="text-align:left;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-family:var(--font-sans);font-size:13px;color:var(--text-muted);cursor:pointer;width:100%;margin-bottom:6px;">'+q+'</button>').join('');
     }
 
-    if(analysis.transits&&analysis.transits.length){
-      const sorted=analysis.transits.sort((a,b)=>{const o={alta:0,high:0,media:1,medium:1,baixa:2,low:2};return (o[a.intensity]||1)-(o[b.intensity]||1);});
-      let html='';
-      for(const t of sorted){
-        const dColor=DURATION_COLOR[t.duration]||'var(--gold)';
-        const dLabel=DURATION_LABEL[t.duration]||t.duration;
-        const iDot=INTENSITY_DOT[t.intensity]||'var(--gold)';
-        html+='<div style="padding:14px 0;border-bottom:1px solid var(--border);"><div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span style="width:6px;height:6px;border-radius:50%;background:'+iDot+';flex-shrink:0;display:inline-block;"></span><span style="font-size:13px;font-weight:500;color:var(--text);flex:1;">'+t.title+'</span><span style="font-size:10px;color:'+dColor+';border:1px solid '+dColor+';border-radius:10px;padding:2px 8px;white-space:nowrap;">'+dLabel+'</span></div><div style="font-size:13px;color:var(--text-muted);line-height:1.65;margin-bottom:8px;">'+t.description+'</div><div style="font-size:12px;color:var(--gold);padding:8px 10px;background:rgba(201,169,110,0.06);border-radius:8px;border-left:2px solid var(--gold);">\u2192 '+t.action+'</div></div>';
-      }
-      document.getElementById('transit-list').innerHTML=html;
+    // TRANSIT LIST
+    let listHtml='';
+    const sections=[
+      {key:'mudancas_recentes',label:isPT2?'Mudan\xe7as recentes':'Recent changes',color:'#7fb5c9'},
+      {key:'ainda_ativas',label:isPT2?'Ainda ativas':'Still active',color:'#c9a96e'},
+      {key:'longo_prazo',label:isPT2?'Longo prazo':'Long term',color:'#a89bd4'},
+      {key:'terminando',label:isPT2?'Terminando':'Ending',color:'#8fbf8a'},
+    ];
+    for(const sec of sections){
+      const items=analysis[sec.key];
+      if(!items||!items.length)continue;
+      listHtml+='<div style="font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:'+sec.color+';margin:18px 0 10px;">'+sec.label+'</div>';
+      for(const t of items)listHtml+=transitCard(t,sec.color);
     }
+    document.getElementById('transit-list').innerHTML=listHtml;
 
     document.getElementById('transit-loading').style.display='none';
     document.getElementById('transit-content').style.display='block';
-
   }catch(e){
     document.getElementById('transit-loading').innerHTML='<div style="color:var(--text-dim);font-size:13px;">'+(isPT?'Erro ao carregar tr\xe2nsitos.':'Could not load transits.')+'</div>';
   }
