@@ -990,36 +990,105 @@ let skyLoaded=false;
 async function loadSky(){
   if(skyLoaded)return;
   skyLoaded=true;
+
   const now=new Date();
-  document.getElementById('sky-date').textContent=now.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
   const isPT=user.lang==='pt';
+
+  document.getElementById('transit-title').textContent=isPT?'Tr\xe2nsitos':'Transits';
+  document.getElementById('transit-list-title').textContent=isPT?'Tr\xe2nsitos ativos':'Active transits';
+  document.getElementById('sky-planets-title').textContent=isPT?'Planetas hoje':'Planets today';
+  document.getElementById('transit-questions-title').textContent=isPT?'O que voc\xea quer entender?':'What do you want to understand?';
+  document.getElementById('sky-date').textContent=now.toLocaleDateString(isPT?'pt-BR':'en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+
   const SIGN_PT={Aries:'\xc1ries',Ari:'\xc1ries',Taurus:'Touro',Tau:'Touro',Gemini:'G\xeameos',Gem:'G\xeameos',Cancer:'C\xe2ncer',Can:'C\xe2ncer',Leo:'Le\xe3o',Virgo:'Virgem',Vir:'Virgem',Libra:'Libra',Lib:'Libra',Scorpio:'Escorpi\xe3o',Sco:'Escorpi\xe3o',Sagittarius:'Sagit\xe1rio',Sag:'Sagit\xe1rio',Capricorn:'Capric\xf3rnio',Cap:'Capric\xf3rnio',Aquarius:'Aqu\xe1rio',Aqu:'Aqu\xe1rio',Pisces:'Peixes',Pis:'Peixes'};
-  const NAME_PT={Sun:'Sol',Moon:'Lua',Mercury:'Merc\xfario',Venus:'V\xeanus',Mars:'Marte',Jupiter:'J\xfapiter',Saturn:'Saturno',Uranus:'Urano',Neptune:'Netuno',Pluto:'Plut\xe3o','True North Node':'Nodo Norte',True_North_Lunar_Node:'Nodo Norte'};
+  const NAME_PT={Sun:'Sol',Moon:'Lua',Mercury:'Merc\xfario',Venus:'V\xeanus',Mars:'Marte',Jupiter:'J\xfapiter',Saturn:'Saturno',Uranus:'Urano',Neptune:'Netuno',Pluto:'Plut\xe3o',True_North_Lunar_Node:'Nodo Norte',Chiron:'Qu\xedron'};
+  const ELEM_COLOR={Aries:'#e07060',Ari:'#e07060',Taurus:'#8fbf8a',Tau:'#8fbf8a',Gemini:'#7fb5c9',Gem:'#7fb5c9',Cancer:'#8b7fd4',Can:'#8b7fd4',Leo:'#e07060',Virgo:'#8fbf8a',Vir:'#8fbf8a',Libra:'#7fb5c9',Lib:'#7fb5c9',Scorpio:'#8b7fd4',Sco:'#8b7fd4',Sagittarius:'#e07060',Sag:'#e07060',Capricorn:'#8fbf8a',Cap:'#8fbf8a',Aquarius:'#7fb5c9',Aqu:'#7fb5c9',Pisces:'#8b7fd4',Pis:'#8b7fd4'};
   const sN=s=>isPT?(SIGN_PT[s]||s):s;
   const pN=n=>isPT?(NAME_PT[n]||n):n;
- const ELEM_COLOR={Aries:'#e07060',Ari:'#e07060',Taurus:'#8fbf8a',Tau:'#8fbf8a',Gemini:'#7fb5c9',Gem:'#7fb5c9',Cancer:'#8b7fd4',Can:'#8b7fd4',Leo:'#e07060',Virgo:'#8fbf8a',Vir:'#8fbf8a',Libra:'#7fb5c9',Lib:'#7fb5c9',Scorpio:'#8b7fd4',Sco:'#8b7fd4',Sagittarius:'#e07060',Sag:'#e07060',Capricorn:'#8fbf8a',Cap:'#8fbf8a',Aquarius:'#7fb5c9',Aqu:'#7fb5c9',Pisces:'#8b7fd4',Pis:'#8b7fd4'};
+  const DURATION_LABEL={curto:'Curto prazo',medio:'M\xe9dio prazo',longo:'Longo prazo',terminando:'Terminando',short:'Short term',medium:'Medium term',long:'Long term',ending:'Ending'};
+  const DURATION_COLOR={curto:'#7fb5c9',medio:'#c9a96e',longo:'#a89bd4',terminando:'#8fbf8a',short:'#7fb5c9',medium:'#c9a96e',long:'#a89bd4',ending:'#8fbf8a'};
+  const INTENSITY_DOT={alta:'#e07060',media:'#c9a96e',baixa:'#8fbf8a',high:'#e07060',medium:'#c9a96e',low:'#8fbf8a'};
+
+  const subject={
+    name:user.name||'User',
+    year:parseInt(user.birthDate.split('-')[0]),
+    month:parseInt(user.birthDate.split('-')[1]),
+    day:parseInt(user.birthDate.split('-')[2]),
+    hour:user.birthTime?parseInt(user.birthTime.split(':')[0]):12,
+    minute:user.birthTime?parseInt(user.birthTime.split(':')[1]):0,
+    city:(user.birthCity||'').split(',')[0].trim()||'London',
+    nation:user.birthNation||'GB',
+    longitude:parseFloat(user.birthLng||0),
+    latitude:parseFloat(user.birthLat||0),
+    timezone:user.birthTimezone||'America/Sao_Paulo',
+  };
+
   try{
-    const resp=await fetch('/api/sky');
-    const data=await resp.json();
-    if(!data.planets||!data.planets.length)throw new Error('No planet data');
-    let html='';
-    for(const p of data.planets){
-      const sign=p.sign||'';
-      const deg=p.degree??'';
-      const rx=p.retrograde?' <span style="color:var(--text-dim);font-size:11px;">Rx</span>':'';
-      html+='<div style="display:flex;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);"><div style="font-size:14px;color:var(--text);flex:1.2">'+pN(p.name)+'</div><div style="font-size:14px;color:'+(ELEM_COLOR[sign]||'var(--gold)')+';">'+sN(sign)+rx+'</div><div style="font-size:12px;color:var(--text-dim);margin-left:auto">'+deg+'\xb0</div></div>';
+    const [transitResp,skyResp]=await Promise.all([
+      fetch('/api/transits',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({subject})}),
+      fetch('/api/sky'),
+    ]);
+    const [transitData,skyData]=await Promise.all([transitResp.json(),skyResp.json()]);
+
+    if(skyData.planets&&skyData.planets.length){
+      let html='';
+      for(const p of skyData.planets){
+        const sign=p.sign||'';
+        const deg=p.degree??'';
+        const rx=p.retrograde?' <span style="color:var(--text-dim);font-size:11px;">Rx</span>':'';
+        html+='<div style="display:flex;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);"><div style="font-size:13px;color:var(--text);flex:1.2">'+pN(p.name)+'</div><div style="font-size:13px;color:'+(ELEM_COLOR[sign]||'var(--gold)')+';">'+sN(sign)+rx+'</div><div style="font-size:12px;color:var(--text-dim);margin-left:auto">'+deg+'\xb0</div></div>';
+      }
+      document.getElementById('sky-planets').innerHTML=html;
     }
-    document.getElementById('sky-planets').innerHTML=html;
-    document.getElementById('sky-aspects').innerHTML='<div style="font-size:13px;color:var(--text-dim);padding:10px 0">'+(isPT?'Aspectos calculados em breve.':'Aspects coming soon.')+'</div>';
-    document.getElementById('sky-loading').style.display='none';
-    document.getElementById('sky-content').style.display='block';
+
+    const analysisResp=await fetch('/api/transit-analysis',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({transitContext:transitData.context||'',natalContext:chartContext||'',lang:user.lang,name:user.name})});
+    const analysis=await analysisResp.json();
+
+    if(analysis.summary){
+      document.getElementById('transit-summary').innerHTML='<div style="font-size:14px;line-height:1.7;color:var(--text);">'+analysis.summary+'</div>';
+    }
+
+    if(analysis.questions&&analysis.questions.length){
+      document.getElementById('transit-questions').innerHTML=analysis.questions.map(q=>'<button onclick="askTransitQuestion('+JSON.stringify(q)+')" style="text-align:left;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;font-family:var(--font-sans);font-size:13px;color:var(--text-muted);cursor:pointer;width:100%;">'+q+'</button>').join('');
+      document.getElementById('transit-questions-card').style.display='block';
+    }
+
+    if(analysis.transits&&analysis.transits.length){
+      const sorted=analysis.transits.sort((a,b)=>{const o={alta:0,high:0,media:1,medium:1,baixa:2,low:2};return (o[a.intensity]||1)-(o[b.intensity]||1);});
+      let html='';
+      for(const t of sorted){
+        const dColor=DURATION_COLOR[t.duration]||'var(--gold)';
+        const dLabel=DURATION_LABEL[t.duration]||t.duration;
+        const iDot=INTENSITY_DOT[t.intensity]||'var(--gold)';
+        html+='<div style="padding:14px 0;border-bottom:1px solid var(--border);"><div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span style="width:6px;height:6px;border-radius:50%;background:'+iDot+';flex-shrink:0;display:inline-block;"></span><span style="font-size:13px;font-weight:500;color:var(--text);flex:1;">'+t.title+'</span><span style="font-size:10px;color:'+dColor+';border:1px solid '+dColor+';border-radius:10px;padding:2px 8px;white-space:nowrap;">'+dLabel+'</span></div><div style="font-size:13px;color:var(--text-muted);line-height:1.65;margin-bottom:8px;">'+t.description+'</div><div style="font-size:12px;color:var(--gold);padding:8px 10px;background:rgba(201,169,110,0.06);border-radius:8px;border-left:2px solid var(--gold);">\u2192 '+t.action+'</div></div>';
+      }
+      document.getElementById('transit-list').innerHTML=html;
+    }
+
+    document.getElementById('transit-loading').style.display='none';
+    document.getElementById('transit-content').style.display='block';
+
   }catch(e){
-    document.getElementById('sky-loading').style.display='none';
-    document.getElementById('sky-content').style.display='block';
-    document.getElementById('sky-planets').innerHTML='<div style="color:var(--text-dim);font-size:13px;padding:12px 0;">Could not load current positions.</div>';
+    document.getElementById('transit-loading').innerHTML='<div style="color:var(--text-dim);font-size:13px;">'+(isPT?'Erro ao carregar tr\xe2nsitos.':'Could not load transits.')+'</div>';
   }
 }
 
+async function askTransitQuestion(question){
+  const isPT=user.lang==='pt';
+  const answerCard=document.getElementById('transit-answer-card');
+  const answerText=document.getElementById('transit-answer-text');
+  answerCard.style.display='block';
+  answerText.innerHTML='<span style="color:var(--text-dim);font-style:italic;">'+(isPT?'Analisando...':'Analyzing...')+'</span>';
+  answerCard.scrollIntoView({behavior:'smooth',block:'nearest'});
+  const sys=isPT?'Você é Orbita. Responda em 2-3 parágrafos curtos. Direto, comportamental, sem jargão. Termine com uma ação concreta que a pessoa pode tomar hoje.':'You are Orbita. Answer in 2-3 short paragraphs. Direct, behavioral, no jargon. End with a concrete action the person can take today.';
+  try{
+    const r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({system:sys+'\n\nChart:\n'+(chartContext?chartContext.substring(0,2000):''),messages:[{role:'user',content:question}],maxTokens:500})});
+    const data=await r.json();
+    answerText.innerHTML=data.text.split('\n\n').filter(p=>p.trim()).map(p=>'<p style="margin-bottom:10px;font-size:14px;line-height:1.75;">'+p+'</p>').join('');
+  }catch(e){
+    answerText.innerHTML='<p style="color:#e07070">'+e.message+'</p>';
+  }
+}
 function initMoon(){
   const now=new Date();
   document.getElementById('moon-date').textContent=now.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
