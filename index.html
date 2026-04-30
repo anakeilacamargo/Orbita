@@ -718,7 +718,7 @@ async function generateChart(){
       lat=parseFloat(d[0].lat);lng=parseFloat(d[0].lon);
     }
     const TZ_MAP={BR:'America/Sao_Paulo',US:'America/New_York',GB:'Europe/London',DE:'Europe/Berlin',FR:'Europe/Paris',IT:'Europe/Rome',ES:'Europe/Madrid',PT:'Europe/Lisbon',AR:'America/Argentina/Buenos_Aires',MX:'America/Mexico_City',CO:'America/Bogota',CL:'America/Santiago',PE:'America/Lima',JP:'Asia/Tokyo',CN:'Asia/Shanghai',IN:'Asia/Kolkata',AU:'Australia/Sydney',CA:'America/Toronto',ZA:'Africa/Johannesburg',RU:'Europe/Moscow',TR:'Europe/Istanbul',AE:'Asia/Dubai',KR:'Asia/Seoul',NG:'Africa/Lagos',EG:'Africa/Cairo',SA:'Asia/Riyadh'};
-    const timezone=TZ_MAP[user.birthNation?.toUpperCase()]||'UTC';
+    const timezone = 'UTC';
     const[year,month,day]=user.birthDate.split('-').map(Number);
     let hour=12,minute=0;
     if(user.birthTime){const[h,m]=user.birthTime.split(':').map(Number);hour=h;minute=m;}
