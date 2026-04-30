@@ -19,13 +19,13 @@ export default async function handler(req, res) {
   };
 
   try {
-    // Timezone server-side
-    if (!subject.timezone || subject.timezone === 'UTC') {
-      try {
-        const tzResp = await fetch(`https://timeapi.io/api/TimeZone/coordinate?latitude=${subject.latitude}&longitude=${subject.longitude}`);
-        const tzData = await tzResp.json();
-        if (tzData.timeZone) subject.timezone = tzData.timeZone;
-      } catch {}
+   // SEMPRE faz lookup por coordenadas — nunca confia no timezone vindo do frontend
+try {
+  const tzResp = await fetch(`https://timeapi.io/api/TimeZone/coordinate?latitude=${subject.latitude}&longitude=${subject.longitude}`);
+  const tzData = await tzResp.json();
+  if (tzData.timeZone) subject.timezone = tzData.timeZone;
+} catch {
+  subject.timezone = subject.timezone || 'UTC';
     }
 
     // Fetch chart + context in parallel
