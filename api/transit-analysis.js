@@ -1,192 +1,260 @@
+// Aspect definitions: [angle, orb for slow transits, orb for personal transits, name_pt, name_en]
+const ASPECTS = [
+  { angle: 0,   orbSlow: 8, orbPersonal: 6, namePT: 'conjunção',   nameEN: 'conjunction' },
+  { angle: 60,  orbSlow: 5, orbPersonal: 4, namePT: 'sextil',      nameEN: 'sextile' },
+  { angle: 90,  orbSlow: 7, orbPersonal: 5, namePT: 'quadratura',  nameEN: 'square' },
+  { angle: 120, orbSlow: 7, orbPersonal: 5, namePT: 'trígono',     nameEN: 'trine' },
+  { angle: 180, orbSlow: 8, orbPersonal: 6, namePT: 'oposição',    nameEN: 'opposition' },
+];
+
+const SLOW_PLANETS = ['Saturn', 'Jupiter', 'Uranus', 'Neptune', 'Pluto', 'True_Node', 'True_North_Lunar_Node'];
+
+function angularDistance(a, b) {
+  const diff = Math.abs(a - b) % 360;
+  return diff > 180 ? 360 - diff : diff;
+}
+
+function findAspect(transitAbsPos, natalAbsPos, transitName) {
+  const isSlow = SLOW_PLANETS.some(s => transitName.toLowerCase().includes(s.toLowerCase()));
+  const dist = angularDistance(transitAbsPos, natalAbsPos);
+  for (const asp of ASPECTS) {
+    const orb = isSlow ? asp.orbSlow : asp.orbPersonal;
+    const diff = Math.abs(dist - asp.angle);
+    if (diff <= orb) {
+      return { ...asp, orb: parseFloat(diff.toFixed(2)) };
+    }
+  }
+  return null;
+}
+
+// Classify transit duration by transiting planet speed
+function classifyDuration(planetName) {
+  const name = planetName.toLowerCase();
+  if (['pluto', 'neptune', 'uranus'].some(p => name.includes(p))) return 'longo';
+  if (['saturn', 'jupiter'].some(p => name.includes(p))) return 'medio';
+  return 'curto';
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   const ANTHROPIC_KEY = process.env.ANTHROPIC_KEY;
   if (!ANTHROPIC_KEY) return res.status(500).json({ error: 'API key not configured' });
 
-  const { transitContext, natalContext, lang, name } = req.body;
-  if (!transitContext) return res.status(400).json({ error: 'Missing transitContext' });
+  // skyPlanets: [{name, sign, abs_pos, degree, retrograde}]
+  // natalPlanets: [{name, sign, abs_pos, degree, house}]
+  const { skyPlanets, natalPlanets, natalContext, lang, name } = req.body;
+
+  if (!skyPlanets || !natalPlanets) {
+    return res.status(400).json({ error: 'Missing skyPlanets or natalPlanets' });
+  }
 
   const isPT = lang === 'pt';
 
-  const system = isPT ? `Você é Orbita, um motor de análise astrológica especializado em trânsitos.
+  // --- CALCULATE CROSS-ASPECTS ---
+  const aspects = [];
+  for (const transit of skyPlanets) {
+    if (transit.abs_pos === null) continue;
+    for (const natal of natalPlanets) {
+      if (natal.abs_pos === null) continue;
+      // Skip slow-to-slow (e.g. Neptune transit → natal Pluto)
+      const transitIsSlow = SLOW_PLANETS.some(s => transit.name.toLowerCase().includes(s.toLowerCase()));
+      const natalIsSlow = SLOW_PLANETS.some(s => natal.name.toLowerCase().includes(s.toLowerCase()));
+      if (transitIsSlow && natalIsSlow) continue;
 
-Analise os aspectos de trânsito e organize a análise em 6 seções fixas, como um dashboard do momento desta pessoa.
+      const asp = findAspect(transit.abs_pos, natal.abs_pos, transit.name);
+      if (asp) {
+        aspects.push({
+          transit: { name: transit.name, sign: transit.sign, degree: transit.degree, retrograde: transit.retrograde },
+          natal: { name: natal.name, sign: natal.sign, degree: natal.degree, house: natal.house },
+          aspect: isPT ? asp.namePT : asp.nameEN,
+          orb: asp.orb,
+          duration: classifyDuration(transit.name),
+        });
+      }
+    }
+  }
 
-REGRAS DE INCLUSÃO:
-- Conjunções e oposições: orbe até 8 graus
-- Quadraturas: orbe até 6 graus
-- Trígonos e sextis: orbe até 5 graus
-- Ignore aspectos entre planetas lentos entre si (Netuno/Urano, Plutão/Netuno etc)
-- Priorize: Saturno, Júpiter, Plutão, Urano, Netuno sobre pontos natais sensíveis
-- Inclua também planetas pessoais (Sol, Lua, Mercúrio, Vênus, Marte) em aspectos com pontos natais importantes
+  // Sort: slow planets first, then by orb
+  aspects.sort((a, b) => {
+    const aScore = SLOW_PLANETS.some(s => a.transit.name.toLowerCase().includes(s.toLowerCase())) ? 0 : 1;
+    const bScore = SLOW_PLANETS.some(s => b.transit.name.toLowerCase().includes(s.toLowerCase())) ? 0 : 1;
+    if (aScore !== bScore) return aScore - bScore;
+    return a.orb - b.orb;
+  });
 
-LINGUAGEM:
-- Comportamental e direta. Zero jargão místico.
-- Nada de "energia", "vibração", "portal", "despertar", "jornada"
-- Descreva o que muda no comportamento, nas emoções, nas circunstâncias
-- Seja específico ao mapa desta pessoa — não genérico
-- Cada descrição deve soar como se fosse escrita só para ela
+  // Format aspect list for Claude — precise and structured
+  const rx = p => p.retrograde ? ' Rx' : '';
+  const fmt = a =>
+    `${a.transit.name}${rx(a.transit)} ${a.transit.sign} ${a.transit.degree?.toFixed(1)}° — ${a.aspect} (orbe ${a.orb}°) — natal ${a.natal.name} ${a.natal.sign} ${a.natal.degree?.toFixed(1)}° Casa ${a.natal.house ?? '?'} [${a.duration}]`;
 
-ESTRUTURA OBRIGATÓRIA — retorne APENAS este JSON válido, sem markdown, sem preâmbulo:
+  const aspectBlock = aspects.length
+    ? aspects.map(fmt).join('\n')
+    : (isPT ? 'Nenhum aspecto significativo encontrado.' : 'No significant aspects found.');
+
+  const system = isPT
+    ? `Você é Orbita, motor de análise astrológica de trânsitos.
+
+Você recebe uma lista de aspectos já calculados (planetas do céu atual × mapa natal da pessoa) e o contexto natal.
+Sua função: transformar esses dados em análise comportamental precisa, em 6 seções.
+
+PRINCÍPIOS:
+- Seja específico ao mapa desta pessoa. Use os planetas, signos e casas mencionados.
+- Descreva comportamento e circunstâncias concretas — não estados de ânimo vagos.
+- Hierarquize: planetas lentos (Saturno, Júpiter, Plutão, Urano, Netuno) têm mais peso.
+- Para cada seção, use apenas os aspectos mais relevantes — não force todos.
+- Nada de: "energia", "vibração", "portal", "jornada", "despertar", "fluxo cósmico".
+- Nada de condicionais ("pode ser que", "talvez"). Escreva no presente afirmativo.
+- Termine cada ação com um verbo no imperativo e algo concreto, não genérico.
+
+RETORNE APENAS este JSON válido, sem markdown, sem preâmbulo:
 
 {
   "mais_importante": {
-    "title": "Título do trânsito mais dominante agora",
-    "planet_transit": "Planeta transitante",
-    "planet_natal": "Planeta natal afetado",
+    "transit_display": "Ex: Saturno ♄ Peixes 2° — quadratura — Sol natal ♀ Sagitário 29° Casa 5",
+    "title": "Título curto e preciso do trânsito mais dominante",
     "aspect": "tipo do aspecto",
-    "orb": "orbe em graus",
-    "description": "3-4 frases. O que este trânsito está fazendo com esta pessoa agora. Específico, comportamental, sem condicionais. Presente.",
-    "action": "O que ela pode fazer concretamente esta semana."
+    "orb": "número",
+    "description": "3-4 frases. O que este trânsito está causando concretamente agora — no comportamento, nas circunstâncias, nas emoções. Use o signo e a casa natal. Sem condicionais.",
+    "action": "Ação concreta e específica para esta semana. Começa com verbo no imperativo."
   },
   "mudancas_recentes": [
     {
+      "transit_display": "Ex: Júpiter ♃ Câncer 18° — conjunção — Vênus natal ♀ Câncer 20° Casa 7",
       "title": "Título",
-      "planet_transit": "Planeta transitante",
-      "planet_natal": "Planeta natal",
       "aspect": "tipo",
-      "orb": "orbe",
-      "description": "2 frases. O que mudou recentemente por causa deste trânsito.",
+      "orb": "número",
+      "description": "2 frases. O que mudou recentemente.",
       "action": "Ação concreta."
     }
   ],
   "ainda_ativas": [
     {
+      "transit_display": "string",
       "title": "Título",
-      "planet_transit": "Planeta transitante",
-      "planet_natal": "Planeta natal",
       "aspect": "tipo",
-      "orb": "orbe",
-      "description": "2 frases. Trânsito em curso, já presente há algum tempo.",
+      "orb": "número",
+      "description": "2 frases.",
       "action": "Ação concreta."
     }
   ],
   "longo_prazo": [
     {
+      "transit_display": "string",
       "title": "Título",
-      "planet_transit": "Saturno/Plutão/Urano/Netuno",
-      "planet_natal": "Planeta natal",
       "aspect": "tipo",
-      "orb": "orbe",
-      "description": "2-3 frases. O pano de fundo dos próximos meses. O que está sendo transformado estruturalmente.",
-      "action": "Como trabalhar com isso no longo prazo."
+      "orb": "número",
+      "description": "2-3 frases. O que está sendo transformado estruturalmente nos próximos meses.",
+      "action": "Como trabalhar com isso."
     }
   ],
   "terminando": [
     {
+      "transit_display": "string",
       "title": "Título",
-      "planet_transit": "Planeta transitante",
-      "planet_natal": "Planeta natal",
       "aspect": "tipo",
-      "orb": "orbe",
-      "description": "1-2 frases. O que está encerrando. O que foi este ciclo.",
-      "action": "Como fechar bem este ciclo."
+      "orb": "número",
+      "description": "1-2 frases. O que está encerrando.",
+      "action": "Como fechar este ciclo."
     }
   ],
   "como_esta_vendo_a_vida": {
     "humor": "uma palavra: expansivo / contraído / acelerado / lento / intenso / leve / confuso / focado",
-    "filtro": "2-3 frases. Como esta pessoa está interpretando tudo que acontece agora por causa dos trânsitos dominantes. Qual é o filtro emocional e mental do momento.",
-    "cuidado": "1-2 frases. O maior risco de interpretação errada da realidade que ela corre agora.",
+    "filtro": "2-3 frases. O filtro emocional e mental desta pessoa agora — baseado nos trânsitos dominantes. Específico.",
+    "cuidado": "1-2 frases. O maior risco de distorção da realidade que ela corre agora.",
     "perguntas": [
-      "Pergunta clicável 1 — baseada no trânsito mais intenso",
-      "Pergunta clicável 2 — sobre emoções ou relacionamentos",
-      "Pergunta clicável 3 — sobre trabalho ou decisões",
-      "Pergunta clicável 4 — sobre o padrão mais desafiador agora"
+      "Pergunta clicável 1 — específica ao trânsito mais intenso, com planeta e casa mencionados",
+      "Pergunta clicável 2 — sobre emoções ou relacionamentos baseada nos aspectos reais",
+      "Pergunta clicável 3 — sobre trabalho ou decisões baseada nos aspectos reais",
+      "Pergunta clicável 4 — sobre o padrão mais desafiador identificado nos aspectos"
     ]
   }
-}` : `You are Orbita, an astrology analysis engine specialized in transits.
+}`
+    : `You are Orbita, a transit astrology analysis engine.
 
-Analyze the transit aspects and organize the analysis into 6 fixed sections, like a dashboard of this person's current moment.
+You receive a pre-calculated list of aspects (current sky planets × this person's natal chart) and natal context.
+Your job: turn this data into precise behavioral analysis in 6 sections.
 
-INCLUSION RULES:
-- Conjunctions and oppositions: orb up to 8 degrees
-- Squares: orb up to 6 degrees
-- Trines and sextiles: orb up to 5 degrees
-- Ignore aspects between slow planets themselves (Neptune/Uranus, Pluto/Neptune etc)
-- Prioritize: Saturn, Jupiter, Pluto, Uranus, Neptune over sensitive natal points
-- Include personal planets (Sun, Moon, Mercury, Venus, Mars) in aspects with important natal points
+PRINCIPLES:
+- Be specific to this person's chart. Use the planets, signs, and houses mentioned.
+- Describe concrete behavior and circumstances — not vague moods.
+- Prioritize: slow planets (Saturn, Jupiter, Pluto, Uranus, Neptune) carry more weight.
+- Per section, use the most relevant aspects — don't force all of them.
+- No: "energy", "vibration", "portal", "journey", "awakening", "cosmic flow".
+- No conditionals ("might be", "perhaps"). Write in present affirmative.
+- End each action with an imperative verb and something concrete, not generic.
 
-LANGUAGE:
-- Behavioral and direct. Zero mystical jargon.
-- No "energy", "vibration", "portal", "awakening", "journey"
-- Describe what changes in behavior, emotions, circumstances
-- Be specific to this person's chart — not generic
-- Each description should sound like it was written only for them
-
-MANDATORY STRUCTURE — return ONLY this valid JSON, no markdown, no preamble:
+RETURN ONLY this valid JSON, no markdown, no preamble:
 
 {
   "mais_importante": {
-    "title": "Title of the most dominant transit right now",
-    "planet_transit": "Transiting planet",
-    "planet_natal": "Affected natal planet",
+    "transit_display": "Ex: Saturn ♄ Pisces 2° — square — natal Sun ☉ Sagittarius 29° House 5",
+    "title": "Short precise title of the most dominant transit",
     "aspect": "aspect type",
-    "orb": "orb in degrees",
-    "description": "3-4 sentences. What this transit is doing to this person right now. Specific, behavioral, no conditionals. Present tense.",
-    "action": "What they can concretely do this week."
+    "orb": "number",
+    "description": "3-4 sentences. What this transit is concretely doing now — to behavior, circumstances, emotions. Use the sign and natal house. No conditionals.",
+    "action": "Concrete, specific action for this week. Starts with an imperative verb."
   },
   "mudancas_recentes": [
     {
+      "transit_display": "Ex: Jupiter ♃ Cancer 18° — conjunction — natal Venus ♀ Cancer 20° House 7",
       "title": "Title",
-      "planet_transit": "Transiting planet",
-      "planet_natal": "Natal planet",
       "aspect": "type",
-      "orb": "orb",
-      "description": "2 sentences. What recently changed because of this transit.",
+      "orb": "number",
+      "description": "2 sentences. What recently changed.",
       "action": "Concrete action."
     }
   ],
   "ainda_ativas": [
     {
+      "transit_display": "string",
       "title": "Title",
-      "planet_transit": "Transiting planet",
-      "planet_natal": "Natal planet",
       "aspect": "type",
-      "orb": "orb",
-      "description": "2 sentences. Ongoing transit, already present for some time.",
+      "orb": "number",
+      "description": "2 sentences.",
       "action": "Concrete action."
     }
   ],
   "longo_prazo": [
     {
+      "transit_display": "string",
       "title": "Title",
-      "planet_transit": "Saturn/Pluto/Uranus/Neptune",
-      "planet_natal": "Natal planet",
       "aspect": "type",
-      "orb": "orb",
-      "description": "2-3 sentences. The backdrop of the coming months. What is being structurally transformed.",
-      "action": "How to work with this long term."
+      "orb": "number",
+      "description": "2-3 sentences. What is being structurally transformed over the coming months.",
+      "action": "How to work with this."
     }
   ],
   "terminando": [
     {
+      "transit_display": "string",
       "title": "Title",
-      "planet_transit": "Transiting planet",
-      "planet_natal": "Natal planet",
       "aspect": "type",
-      "orb": "orb",
-      "description": "1-2 sentences. What is ending. What this cycle was.",
-      "action": "How to close this cycle well."
+      "orb": "number",
+      "description": "1-2 sentences. What is ending.",
+      "action": "How to close this cycle."
     }
   ],
   "como_esta_vendo_a_vida": {
     "humor": "one word: expansive / contracted / accelerated / slow / intense / light / confused / focused",
-    "filtro": "2-3 sentences. How this person is interpreting everything happening now because of dominant transits. What is the emotional and mental filter of the moment.",
-    "cuidado": "1-2 sentences. The biggest risk of misreading reality they face right now.",
+    "filtro": "2-3 sentences. This person's emotional and mental filter right now — based on dominant transits. Specific.",
+    "cuidado": "1-2 sentences. The biggest risk of reality distortion they face right now.",
     "perguntas": [
-      "Clickable question 1 — based on most intense transit",
-      "Clickable question 2 — about emotions or relationships",
-      "Clickable question 3 — about work or decisions",
-      "Clickable question 4 — about the most challenging pattern right now"
+      "Clickable question 1 — specific to the most intense transit, naming the planet and house",
+      "Clickable question 2 — about emotions or relationships based on real aspects",
+      "Clickable question 3 — about work or decisions based on real aspects",
+      "Clickable question 4 — about the most challenging pattern identified in the aspects"
     ]
   }
 }`;
 
-  const userMsg = `Name: ${name || 'User'}
-Transit data (aspects between today's planets and natal chart):
-${transitContext.substring(0, 6000)}
-${natalContext ? 'Natal context:\n' + natalContext.substring(0, 1500) : ''}
+  const userMsg = `${isPT ? 'Nome' : 'Name'}: ${name || 'User'}
+
+${isPT ? 'Aspectos calculados (trânsito × natal):' : 'Calculated aspects (transit × natal):'}
+${aspectBlock}
+
+${natalContext ? `${isPT ? 'Contexto natal adicional:' : 'Additional natal context:'}\n${natalContext.substring(0, 2000)}` : ''}
+
 ${isPT ? 'Retorne APENAS o JSON válido.' : 'Return ONLY valid JSON.'}`;
 
   try {
@@ -198,7 +266,7 @@ ${isPT ? 'Retorne APENAS o JSON válido.' : 'Return ONLY valid JSON.'}`;
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-opus-4-5',
         max_tokens: 4000,
         system,
         messages: [{ role: 'user', content: userMsg }],
@@ -211,7 +279,9 @@ ${isPT ? 'Retorne APENAS o JSON válido.' : 'Return ONLY valid JSON.'}`;
 
     const text = data.content[0].text.replace(/```json|```/g, '').trim();
     const parsed = JSON.parse(text);
-    return res.status(200).json(parsed);
+
+    // Also return the raw aspects list so the frontend can display the aspect table
+    return res.status(200).json({ ...parsed, _aspects: aspects });
 
   } catch (e) {
     return res.status(500).json({ error: e.message });
