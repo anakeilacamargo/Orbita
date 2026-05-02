@@ -973,7 +973,7 @@ function initMoonNatal(moon,planets){
     })
     .catch(()=>{if(loadingCard)loadingCard.style.display='none';});
 }
-
+let skyLoaded=false;
 async function loadSky(){
   if(skyLoaded)return;
   skyLoaded=true;
