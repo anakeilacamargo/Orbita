@@ -1121,7 +1121,8 @@ async function loadSky(){
         +transitListEl.outerHTML
         +'</div>';
       transitListEl.replaceWith(wrapper);
-      document.getElementById('transit-list-title').style.display='none';
+     const listTitleEl = document.getElementById('transit-list-title');
+if (listTitleEl) listTitleEl.style.display = 'none';
     }
 
     // 10. DETALHES TÉCNICOS (planetas + aspectos, colapsável)
@@ -1150,7 +1151,8 @@ async function loadSky(){
       const skyCard=skyPlanetsEl.closest('.moon-card');
       if(skyCard)skyCard.replaceWith(wrapper);
       if(aspectTableEl)aspectTableEl.remove();
-      document.getElementById('sky-planets-title').style.display='none';
+     const skyTitleEl = document.getElementById('sky-planets-title');
+if (skyTitleEl) skyTitleEl.style.display = 'none';
     }
 
     document.getElementById('transit-loading').style.display='none';
