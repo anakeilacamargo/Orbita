@@ -1110,6 +1110,7 @@ async function loadSky(){
     document.getElementById('transit-loading').innerHTML='<div style="color:var(--text-dim);font-size:13px;">'+(isPT?'Erro ao carregar trânsitos.':'Could not load transits.')+'</div>';
     console.error('loadSky error:',e);
 } 
+}
 async function askTransitQuestion(question){
   const isPT=user.lang==='pt';
   const answerCard=document.getElementById('transit-answer-card');
