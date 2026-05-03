@@ -982,38 +982,135 @@ async function loadSky(){
   const isPT=user.lang==='pt';
 
   document.getElementById('transit-title').textContent=isPT?'Trânsitos':'Transits';
-  document.getElementById('transit-list-title').textContent=isPT?'Trânsitos ativos':'Active transits';
-  document.getElementById('sky-planets-title').textContent=isPT?'Planetas hoje':'Planets today';
-  document.getElementById('transit-questions-title').textContent=isPT?'O que você quer entender?':'What do you want to understand?';
   document.getElementById('sky-date').textContent=now.toLocaleDateString(isPT?'pt-BR':'en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
 
   const SIGN_PT={Aries:'Áries',Ari:'Áries',Taurus:'Touro',Tau:'Touro',Gemini:'Gêmeos',Gem:'Gêmeos',Cancer:'Câncer',Can:'Câncer',Leo:'Leão',Virgo:'Virgem',Vir:'Virgem',Libra:'Libra',Lib:'Libra',Scorpio:'Escorpião',Sco:'Escorpião',Sagittarius:'Sagitário',Sag:'Sagitário',Capricorn:'Capricórnio',Cap:'Capricórnio',Aquarius:'Aquário',Aqu:'Aquário',Pisces:'Peixes',Pis:'Peixes'};
   const NAME_PT={Sun:'Sol',Moon:'Lua',Mercury:'Mercúrio',Venus:'Vênus',Mars:'Marte',Jupiter:'Júpiter',Saturn:'Saturno',Uranus:'Urano',Neptune:'Netuno',Pluto:'Plutão',True_North_Lunar_Node:'Nodo Norte',True_Node:'Nodo Norte',Chiron:'Quíron',Ascendant:'Ascendente',Medium_Coeli:'Meio do Céu'};
   const ELEM_COLOR={Aries:'#e07060',Ari:'#e07060',Taurus:'#8fbf8a',Tau:'#8fbf8a',Gemini:'#7fb5c9',Gem:'#7fb5c9',Cancer:'#8b7fd4',Can:'#8b7fd4',Leo:'#e07060',Virgo:'#8fbf8a',Vir:'#8fbf8a',Libra:'#7fb5c9',Lib:'#7fb5c9',Scorpio:'#8b7fd4',Sco:'#8b7fd4',Sagittarius:'#e07060',Sag:'#e07060',Capricorn:'#8fbf8a',Cap:'#8fbf8a',Aquarius:'#7fb5c9',Aqu:'#7fb5c9',Pisces:'#8b7fd4',Pis:'#8b7fd4'};
-  const ASPECT_COLOR={'conjunção':'#c9a96e','conjunction':'#c9a96e','oposição':'#e07070','opposition':'#e07070','quadratura':'#e07070','square':'#e07070','trígono':'#8fbf8a','trine':'#8fbf8a','sextil':'#7fb5c9','sextile':'#7fb5c9'};
-  const PLANET_SYMBOL={Sun:'☉',Moon:'☽',Mercury:'☿',Venus:'♀',Mars:'♂',Jupiter:'♃',Saturn:'♄',Uranus:'♅',Neptune:'♆',Pluto:'♇',True_Node:'☊',True_North_Lunar_Node:'☊',Chiron:'⚷',Ascendant:'Asc',Medium_Coeli:'MC'};
 
   const sN=s=>isPT?(SIGN_PT[s]||s):s;
   const pN=n=>isPT?(NAME_PT[n]||n):n;
-  const sym=n=>PLANET_SYMBOL[n]||'';
-  const rxSpan=p=>p.retrograde?'<span style="font-size:10px;color:var(--text-dim);"> Rx</span>':'';
 
-  function transitCard(t,accent){
-    const aColor=ASPECT_COLOR[t.aspect?.toLowerCase()]||'var(--gold)';
-    const displayLine=t.transit_display
-      ?'<div style="font-size:11px;color:var(--text-dim);font-family:monospace;margin-bottom:8px;padding:4px 8px;background:var(--surface2);border-radius:6px;">'+t.transit_display+'</div>'
-      :'';
-    return '<div style="margin-bottom:14px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 16px 12px;">'
-      +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">'
-      +(accent?'<span style="width:6px;height:6px;border-radius:50%;background:'+accent+';flex-shrink:0;display:inline-block;"></span>':'')
-      +'<span style="font-size:13px;font-weight:500;color:var(--text);">'+t.title+'</span>'
-      +(t.orb?'<span style="font-size:10px;color:var(--text-dim);margin-left:auto;">'+parseFloat(t.orb).toFixed(1)+'°</span>':'')
+  // Renderiza um card no formato 4 linhas
+  function transitCard(card,accentColor){
+    return '<div style="margin-bottom:12px;background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;">'
+      +'<div style="padding:12px 14px 10px;border-bottom:1px solid var(--border);">'
+      +'<div style="font-size:13px;font-weight:500;color:var(--text);">'+card.evento+'</div>'
       +'</div>'
-      +displayLine
-      +'<div style="font-size:13px;color:var(--text-muted);line-height:1.65;margin-bottom:10px;">'+t.description+'</div>'
-      +'<div style="font-size:12px;color:var(--gold);padding:8px 10px;background:rgba(201,169,110,0.06);border-radius:8px;border-left:2px solid var(--gold);">→ '+t.action+'</div>'
+      +'<div style="padding:12px 14px;display:flex;flex-direction:column;gap:8px;">'
+      +'<div style="display:flex;gap:8px;align-items:flex-start;">'
+      +'<span style="font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-dim);min-width:80px;padding-top:2px;">'+(isPT?'Significado':'Meaning')+'</span>'
+      +'<span style="font-size:13px;color:var(--text-muted);line-height:1.55;flex:1;">'+card.significado+'</span>'
+      +'</div>'
+      +'<div style="display:flex;gap:8px;align-items:flex-start;">'
+      +'<span style="font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-dim);min-width:80px;padding-top:2px;">'+(isPT?'Vida real':'Real life')+'</span>'
+      +'<span style="font-size:13px;color:var(--text-muted);line-height:1.55;flex:1;">'+card.vida_real+'</span>'
+      +'</div>'
+      +'<div style="margin-top:2px;padding:8px 10px;background:rgba(201,169,110,0.06);border-left:2px solid '+(accentColor||'var(--gold)')+';border-radius:0 6px 6px 0;">'
+      +'<span style="font-size:12px;color:'+(accentColor||'var(--gold)')+';">→ '+card.orientacao+'</span>'
+      +'</div>'
+      +'</div>'
       +'</div>';
   }
+
+  try{
+    // 1. Buscar planetas do céu atual
+    const skyResp=await fetch('/api/sky');
+    const skyData=await skyResp.json();
+
+    // 2. Renderizar tabela "Planetas hoje"
+    if(skyData.planets&&skyData.planets.length){
+      let html='';
+      for(const p of skyData.planets){
+        const sign=p.sign||'';
+        const deg=p.degree!=null?p.degree.toFixed(0):'';
+        html+='<div style="display:flex;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);">'
+          +'<div style="font-size:13px;color:var(--text);flex:1.2;">'+pN(p.name)+'</div>'
+          +'<div style="font-size:13px;color:'+(ELEM_COLOR[sign]||'var(--gold)')+';">'+sN(sign)+(p.retrograde?' <span style="color:var(--text-dim);font-size:11px;">Rx</span>':'')+'</div>'
+          +'<div style="font-size:12px;color:var(--text-dim);margin-left:auto;">'+deg+'°</div>'
+          +'</div>';
+      }
+      document.getElementById('sky-planets').innerHTML=html;
+    }
+
+    // 3. Planetas natais
+    const natalPlanets=(chartRawData?.planets||[])
+      .filter(p=>p.abs_pos!=null)
+      .map(p=>({
+        name:p.name,sign:p.sign,
+        abs_pos:parseFloat(parseFloat(p.abs_pos).toFixed(4)),
+        degree:parseFloat((p.abs_pos%30).toFixed(2)),
+        house:p.house||null,
+      }));
+
+    // 4. Chamar transit-analysis
+    const analysisResp=await fetch('/api/transit-analysis',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({skyPlanets:skyData.planets,natalPlanets,natalContext:chartContext||'',lang:user.lang,name:user.name}),
+    });
+    const analysis=await analysisResp.json();
+
+    // 5. Tabela de aspectos cruzados
+    if(analysis._aspects&&analysis._aspects.length){
+      const ASPECT_COLOR={'conjunção':'#c9a96e','conjunction':'#c9a96e','oposição':'#e07070','opposition':'#e07070','quadratura':'#e07070','square':'#e07070','trígono':'#8fbf8a','trine':'#8fbf8a','sextil':'#7fb5c9','sextile':'#7fb5c9'};
+      const PLANET_SYMBOL={Sun:'☉',Moon:'☽',Mercury:'☿',Venus:'♀',Mars:'♂',Jupiter:'♃',Saturn:'♄',Uranus:'♅',Neptune:'♆',Pluto:'♇',True_Node:'☊',True_North_Lunar_Node:'☊',Chiron:'⚷'};
+      const sym=n=>PLANET_SYMBOL[n]||'';
+      const rxSpan=p=>p.retrograde?'<span style="font-size:10px;color:var(--text-dim);"> Rx</span>':'';
+      let aspectHtml='<div style="font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:var(--text-dim);margin:20px 0 10px;">'+(isPT?'Céu atual × seu mapa':'Current sky × your chart')+'</div>';
+      for(const a of analysis._aspects){
+        const col=ASPECT_COLOR[a.aspect]||'var(--gold)';
+        const tDeg=a.transit.degree!=null?a.transit.degree.toFixed(0):'?';
+        const nDeg=a.natal.degree!=null?a.natal.degree.toFixed(0):'?';
+        aspectHtml+='<div style="display:flex;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);gap:8px;flex-wrap:wrap;">'
+          +'<div style="font-size:13px;color:var(--text);min-width:130px;">'+sym(a.transit.name)+' '+pN(a.transit.name)+rxSpan(a.transit)+'<span style="color:var(--text-dim);font-size:12px;"> '+sN(a.transit.sign)+' '+tDeg+'°</span></div>'
+          +'<div style="font-size:12px;color:'+col+';font-weight:500;min-width:90px;text-align:center;">'+a.aspect+' <span style="color:var(--text-dim);font-size:10px;">('+a.orb+'°)</span></div>'
+          +'<div style="font-size:13px;color:var(--text-muted);flex:1;">'+sym(a.natal.name)+' '+pN(a.natal.name)+'<span style="color:var(--text-dim);font-size:12px;"> '+sN(a.natal.sign)+' '+nDeg+'°'+(a.natal.house?' Casa '+a.natal.house:'')+'</span></div>'
+          +'</div>';
+      }
+      document.getElementById('sky-planets').insertAdjacentHTML('afterend','<div id="aspect-table">'+aspectHtml+'</div>');
+    }
+
+    // 6. HOJE
+    const hoje=analysis.hoje;
+    if(hoje){
+      document.getElementById('transit-summary').innerHTML=
+        '<div style="font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin-bottom:8px;">'+(isPT?'Hoje':'Today')+'</div>'
+        +'<div style="font-size:14px;color:var(--text-muted);line-height:1.65;margin-bottom:'+(hoje.cards&&hoje.cards.length?'16px':'0px')+';">'+hoje.resumo+'</div>'
+        +(hoje.cards&&hoje.cards.length ? hoje.cards.map(c=>transitCard(c,'#c9a96e')).join('') : '');
+    }
+
+    // 7. FASE ATUAL
+    const fase=analysis.fase_atual;
+    if(fase&&fase.cards&&fase.cards.length){
+      document.getElementById('transit-questions-card').style.display='block';
+      document.getElementById('transit-questions-title').textContent=isPT?'Fase atual':'Current phase';
+      document.getElementById('transit-questions').innerHTML=
+        '<div style="font-size:13px;color:var(--text-muted);line-height:1.65;margin-bottom:16px;">'+fase.resumo+'</div>'
+        +fase.cards.map(c=>transitCard(c,'#a89bd4')).join('');
+    }
+
+    // 8. COMO ESTÁ VENDO A VIDA
+    const vida=analysis.como_esta_vendo_a_vida;
+    if(vida){
+      document.getElementById('transit-answer-card').style.display='block';
+      document.getElementById('transit-answer-text').innerHTML=
+        '<div style="font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-dim);margin-bottom:10px;">'+(isPT?'Estado atual':'Current state')+'</div>'
+        +'<div style="font-size:22px;font-weight:300;color:var(--gold);margin-bottom:8px;">'+vida.humor+'</div>'
+        +'<div style="font-size:13px;color:var(--text-muted);line-height:1.7;margin-bottom:10px;">'+vida.filtro+'</div>'
+        +'<div style="font-size:12px;color:#e07070;padding:8px 10px;background:rgba(224,112,96,0.06);border-radius:8px;border-left:2px solid #e07070;margin-bottom:16px;">⚠ '+vida.cuidado+'</div>'
+        +'<div style="font-size:11px;color:var(--text-dim);margin-bottom:8px;letter-spacing:0.1em;text-transform:uppercase;">'+(isPT?'Perguntas':'Questions')+'</div>'
+        +(vida.perguntas||[]).map(q=>'<button onclick="askTransitQuestion('+JSON.stringify(q)+')" style="text-align:left;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-family:var(--font-sans);font-size:13px;color:var(--text-muted);cursor:pointer;width:100%;margin-bottom:6px;">'+q+'</button>').join('');
+    }
+
+    document.getElementById('transit-loading').style.display='none';
+    document.getElementById('transit-content').style.display='block';
+
+  }catch(e){
+    document.getElementById('transit-loading').innerHTML='<div style="color:var(--text-dim);font-size:13px;">'+(isPT?'Erro ao carregar trânsitos.':'Could not load transits.')+'</div>';
+    console.error('loadSky error:',e);
+  }
+}
 
   try{
     // 1. Buscar planetas do céu atual
