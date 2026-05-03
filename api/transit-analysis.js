@@ -1,13 +1,42 @@
-// Aspect definitions: [angle, orb for slow transits, orb for personal transits, name_pt, name_en]
 const ASPECTS = [
-  { angle: 0,   orbSlow: 8, orbPersonal: 6, namePT: 'conjunção',   nameEN: 'conjunction' },
-  { angle: 60,  orbSlow: 5, orbPersonal: 4, namePT: 'sextil',      nameEN: 'sextile' },
-  { angle: 90,  orbSlow: 7, orbPersonal: 5, namePT: 'quadratura',  nameEN: 'square' },
-  { angle: 120, orbSlow: 7, orbPersonal: 5, namePT: 'trígono',     nameEN: 'trine' },
-  { angle: 180, orbSlow: 8, orbPersonal: 6, namePT: 'oposição',    nameEN: 'opposition' },
+  { angle: 0,   orbSlow: 8, orbPersonal: 6, namePT: 'conjunção',   nameEN: 'conjunction',  scoreMod: 30 },
+  { angle: 180, orbSlow: 8, orbPersonal: 6, namePT: 'oposição',    nameEN: 'opposition',   scoreMod: 25 },
+  { angle: 90,  orbSlow: 7, orbPersonal: 5, namePT: 'quadratura',  nameEN: 'square',       scoreMod: 25 },
+  { angle: 120, orbSlow: 7, orbPersonal: 5, namePT: 'trígono',     nameEN: 'trine',        scoreMod: 10 },
+  { angle: 60,  orbSlow: 5, orbPersonal: 4, namePT: 'sextil',      nameEN: 'sextile',      scoreMod: 8  },
 ];
 
-const SLOW_PLANETS = ['Saturn', 'Jupiter', 'Uranus', 'Neptune', 'Pluto', 'True_Node', 'True_North_Lunar_Node'];
+const SLOW_PLANETS   = ['Saturn', 'Jupiter', 'Uranus', 'Neptune', 'Pluto', 'True_Node', 'True_North_Lunar_Node', 'Chiron'];
+const MEDIUM_PLANETS = ['Saturn', 'Jupiter'];
+const OUTER_PLANETS  = ['Uranus', 'Neptune', 'Pluto'];
+
+// Score de impacto 0–100 por aspecto
+function impactScore(aspect) {
+  // A) Tipo de aspecto
+  const aspScore = aspect._asp.scoreMod;
+
+  // B) Planeta em trânsito
+  const tName = aspect.transit.name.toLowerCase();
+  let planetScore = 0;
+  if (['neptune','pluto','uranus','saturn'].some(p => tName.includes(p))) planetScore = 30;
+  else if (tName.includes('jupiter'))                                       planetScore = 20;
+  else if (['sun','moon'].some(p => tName.includes(p)))                    planetScore = 20;
+  else if (['mars','venus','mercury'].some(p => tName.includes(p)))        planetScore = 15;
+  else                                                                       planetScore = 10;
+
+  // C) Duração (orbe como proxy de intensidade)
+  const orb = aspect.orb;
+  const durationScore = orb <= 1 ? 20 : orb <= 3 ? 10 : 5;
+
+  return Math.min(100, aspScore + planetScore + durationScore);
+}
+
+function classifySpeed(planetName) {
+  const n = planetName.toLowerCase();
+  if (OUTER_PLANETS.some(p => n.includes(p)))  return 'lento';
+  if (MEDIUM_PLANETS.some(p => n.includes(p))) return 'medio';
+  return 'rapido';
+}
 
 function angularDistance(a, b) {
   const diff = Math.abs(a - b) % 360;
@@ -27,233 +56,191 @@ function findAspect(transitAbsPos, natalAbsPos, transitName) {
   return null;
 }
 
-// Classify transit duration by transiting planet speed
-function classifyDuration(planetName) {
-  const name = planetName.toLowerCase();
-  if (['pluto', 'neptune', 'uranus'].some(p => name.includes(p))) return 'longo';
-  if (['saturn', 'jupiter'].some(p => name.includes(p))) return 'medio';
-  return 'curto';
-}
-
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   const ANTHROPIC_KEY = process.env.ANTHROPIC_KEY;
   if (!ANTHROPIC_KEY) return res.status(500).json({ error: 'API key not configured' });
 
-  // skyPlanets: [{name, sign, abs_pos, degree, retrograde}]
-  // natalPlanets: [{name, sign, abs_pos, degree, house}]
   const { skyPlanets, natalPlanets, natalContext, lang, name } = req.body;
-
   if (!skyPlanets || !natalPlanets) {
     return res.status(400).json({ error: 'Missing skyPlanets or natalPlanets' });
   }
 
   const isPT = lang === 'pt';
 
-  // --- CALCULATE CROSS-ASPECTS ---
-  const aspects = [];
+  // --- CALCULAR ASPECTOS CRUZADOS ---
+  const rawAspects = [];
   for (const transit of skyPlanets) {
-    if (transit.abs_pos === null) continue;
+    if (transit.abs_pos == null) continue;
     for (const natal of natalPlanets) {
-      if (natal.abs_pos === null) continue;
-      // Skip slow-to-slow (e.g. Neptune transit → natal Pluto)
+      if (natal.abs_pos == null) continue;
       const transitIsSlow = SLOW_PLANETS.some(s => transit.name.toLowerCase().includes(s.toLowerCase()));
-      const natalIsSlow = SLOW_PLANETS.some(s => natal.name.toLowerCase().includes(s.toLowerCase()));
-      if (transitIsSlow && natalIsSlow) continue;
+      const natalIsSlow   = SLOW_PLANETS.some(s => natal.name.toLowerCase().includes(s.toLowerCase()));
+      if (transitIsSlow && natalIsSlow) continue; // ignora lento × lento
 
       const asp = findAspect(transit.abs_pos, natal.abs_pos, transit.name);
-      if (asp) {
-        aspects.push({
-          transit: { name: transit.name, sign: transit.sign, degree: transit.degree, retrograde: transit.retrograde },
-          natal: { name: natal.name, sign: natal.sign, degree: natal.degree, house: natal.house },
-          aspect: isPT ? asp.namePT : asp.nameEN,
-          orb: asp.orb,
-          duration: classifyDuration(transit.name),
-        });
-      }
+      if (!asp) continue;
+
+      const entry = {
+        transit: { name: transit.name, sign: transit.sign, degree: transit.degree, retrograde: transit.retrograde, abs_pos: transit.abs_pos },
+        natal:   { name: natal.name,   sign: natal.sign,   degree: natal.degree,   house: natal.house,             abs_pos: natal.abs_pos   },
+        aspect:  isPT ? asp.namePT : asp.nameEN,
+        orb:     asp.orb,
+        speed:   classifySpeed(transit.name),
+        _asp:    asp,
+      };
+      entry.score = impactScore(entry);
+      rawAspects.push(entry);
     }
   }
 
-  // Sort: slow planets first, then by orb
-  aspects.sort((a, b) => {
-    const aScore = SLOW_PLANETS.some(s => a.transit.name.toLowerCase().includes(s.toLowerCase())) ? 0 : 1;
-    const bScore = SLOW_PLANETS.some(s => b.transit.name.toLowerCase().includes(s.toLowerCase())) ? 0 : 1;
-    if (aScore !== bScore) return aScore - bScore;
-    return a.orb - b.orb;
-  });
+  // --- CATEGORIZAR: hoje vs fase_atual ---
+  const sorted = rawAspects.sort((a, b) => b.score - a.score);
 
-  // Format aspect list for Claude — precise and structured
-  const rx = p => p.retrograde ? ' Rx' : '';
-  const fmt = a =>
-    `${a.transit.name}${rx(a.transit)} ${a.transit.sign} ${a.transit.degree?.toFixed(1)}° — ${a.aspect} (orbe ${a.orb}°) — natal ${a.natal.name} ${a.natal.sign} ${a.natal.degree?.toFixed(1)}° Casa ${a.natal.house ?? '?'} [${a.duration}]`;
+  // HOJE: score >= 55, planetas rápidos ou médios, max 5
+  const hoje = sorted
+    .filter(a => a.score >= 55 && (a.speed === 'rapido' || a.speed === 'medio'))
+    .slice(0, 5);
 
-  const aspectBlock = aspects.length
-    ? aspects.map(fmt).join('\n')
-    : (isPT ? 'Nenhum aspecto significativo encontrado.' : 'No significant aspects found.');
+  // FASE ATUAL: score >= 50, planetas lentos
+  const faseAtual = sorted
+    .filter(a => a.score >= 50 && a.speed === 'lento')
+    .slice(0, 6);
 
+  // Formatar para o Claude
+  const rx  = p => p.retrograde ? ' Rx' : '';
+  const fmt = (a, category) => {
+    const houseStr = a.natal.house ? ` Casa ${a.natal.house}` : '';
+    return `[${category}|score:${a.score}] ${a.transit.name}${rx(a.transit)} ${a.transit.sign} ${a.transit.degree?.toFixed(1)}° — ${a.aspect} (orbe ${a.orb}°) — natal ${a.natal.name} ${a.natal.sign} ${a.natal.degree?.toFixed(1)}°${houseStr}`;
+  };
+
+  const hojeBlock     = hoje.length     ? hoje.map(a => fmt(a, 'HOJE')).join('\n')         : (isPT ? 'Nenhum aspecto relevante hoje.' : 'No relevant aspects today.');
+  const faseBlock     = faseAtual.length ? faseAtual.map(a => fmt(a, 'FASE_ATUAL')).join('\n') : (isPT ? 'Nenhum trânsito longo ativo.' : 'No long-term transits active.');
+  const aspectosRaw   = [...hoje, ...faseAtual];
+
+  // --- PROMPT ---
   const system = isPT
     ? `Você é Orbita, motor de análise astrológica de trânsitos.
+Recebe aspectos já calculados e categorizados em duas listas:
+- [HOJE]: aspectos de curto prazo que afetam comportamento imediato
+- [FASE_ATUAL]: trânsitos lentos que definem o período psicológico atual
 
-Você recebe uma lista de aspectos já calculados (planetas do céu atual × mapa natal da pessoa) e o contexto natal.
-Sua função: transformar esses dados em análise comportamental precisa, em 6 seções.
+Sua função: transformar esses dados em análise comportamental precisa em 2 seções.
 
-PRINCÍPIOS:
-- Seja específico ao mapa desta pessoa. Use os planetas, signos e casas mencionados.
-- Descreva comportamento e circunstâncias concretas — não estados de ânimo vagos.
-- Hierarquize: planetas lentos (Saturno, Júpiter, Plutão, Urano, Netuno) têm mais peso.
-- Para cada seção, use apenas os aspectos mais relevantes — não force todos.
+REGRAS DE ESCRITA:
+- Seja específico ao mapa desta pessoa. Use os planetas, signos e casas exatos.
+- Descreva comportamento concreto e circunstâncias — não estados de ânimo vagos.
 - Nada de: "energia", "vibração", "portal", "jornada", "despertar", "fluxo cósmico".
 - Nada de condicionais ("pode ser que", "talvez"). Escreva no presente afirmativo.
-- Termine cada ação com um verbo no imperativo e algo concreto, não genérico.
+- Cada card tem EXATAMENTE 4 campos:
+  * evento: "[Planeta] [aspecto] [Planeta natal]" — só os nomes, sem graus
+  * significado: uma frase. A tensão ou fluxo astrológico em termos psicológicos.
+  * vida_real: uma frase. Como isso aparece no dia a dia desta pessoa — específico à casa e signo natal.
+  * orientacao: uma frase. O que fazer ou evitar. Começa com verbo no imperativo.
 
 RETORNE APENAS este JSON válido, sem markdown, sem preâmbulo:
 
 {
-  "mais_importante": {
-    "transit_display": "Ex: Saturno ♄ Peixes 2° — quadratura — Sol natal ♀ Sagitário 29° Casa 5",
-    "title": "Título curto e preciso do trânsito mais dominante",
-    "aspect": "tipo do aspecto",
-    "orb": "número",
-    "description": "3-4 frases. O que este trânsito está causando concretamente agora — no comportamento, nas circunstâncias, nas emoções. Use o signo e a casa natal. Sem condicionais.",
-    "action": "Ação concreta e específica para esta semana. Começa com verbo no imperativo."
+  "hoje": {
+    "resumo": "1 frase descrevendo o tom geral do dia baseado nos aspectos de hoje.",
+    "cards": [
+      {
+        "evento": "Mercúrio quadratura Lua natal",
+        "significado": "Mente e emoção em conflito — tendência a interpretar falas de forma emocional.",
+        "vida_real": "Conversas na Casa 3 tendem a escalar rapidamente hoje.",
+        "orientacao": "Evite tomar decisões importantes até a noite."
+      }
+    ]
   },
-  "mudancas_recentes": [
-    {
-      "transit_display": "Ex: Júpiter ♃ Câncer 18° — conjunção — Vênus natal ♀ Câncer 20° Casa 7",
-      "title": "Título",
-      "aspect": "tipo",
-      "orb": "número",
-      "description": "2 frases. O que mudou recentemente.",
-      "action": "Ação concreta."
-    }
-  ],
-  "ainda_ativas": [
-    {
-      "transit_display": "string",
-      "title": "Título",
-      "aspect": "tipo",
-      "orb": "número",
-      "description": "2 frases.",
-      "action": "Ação concreta."
-    }
-  ],
-  "longo_prazo": [
-    {
-      "transit_display": "string",
-      "title": "Título",
-      "aspect": "tipo",
-      "orb": "número",
-      "description": "2-3 frases. O que está sendo transformado estruturalmente nos próximos meses.",
-      "action": "Como trabalhar com isso."
-    }
-  ],
-  "terminando": [
-    {
-      "transit_display": "string",
-      "title": "Título",
-      "aspect": "tipo",
-      "orb": "número",
-      "description": "1-2 frases. O que está encerrando.",
-      "action": "Como fechar este ciclo."
-    }
-  ],
+  "fase_atual": {
+    "resumo": "1 frase descrevendo o processo psicológico dominante deste período.",
+    "cards": [
+      {
+        "evento": "Saturno quadratura Sol natal",
+        "significado": "Pressão estrutural sobre identidade — o que foi construído está sendo testado.",
+        "vida_real": "Responsabilidades profissionais aumentam enquanto a motivação oscila na Casa 9.",
+        "orientacao": "Reduza o escopo dos projetos e entregue o que já começou."
+      }
+    ]
+  },
   "como_esta_vendo_a_vida": {
     "humor": "uma palavra: expansivo / contraído / acelerado / lento / intenso / leve / confuso / focado",
-    "filtro": "2-3 frases. O filtro emocional e mental desta pessoa agora — baseado nos trânsitos dominantes. Específico.",
-    "cuidado": "1-2 frases. O maior risco de distorção da realidade que ela corre agora.",
+    "filtro": "2 frases. O filtro emocional desta pessoa agora — baseado nos trânsitos dominantes.",
+    "cuidado": "1 frase. O maior risco de distorção da realidade agora.",
     "perguntas": [
-      "Pergunta clicável 1 — específica ao trânsito mais intenso, com planeta e casa mencionados",
-      "Pergunta clicável 2 — sobre emoções ou relacionamentos baseada nos aspectos reais",
-      "Pergunta clicável 3 — sobre trabalho ou decisões baseada nos aspectos reais",
-      "Pergunta clicável 4 — sobre o padrão mais desafiador identificado nos aspectos"
+      "Pergunta específica ao trânsito mais intenso de hoje, com planeta e casa",
+      "Pergunta sobre emoções ou relacionamentos baseada nos aspectos reais",
+      "Pergunta sobre trabalho ou decisões baseada nos aspectos reais",
+      "Pergunta sobre o padrão mais desafiador identificado na fase atual"
     ]
   }
 }`
     : `You are Orbita, a transit astrology analysis engine.
+You receive pre-calculated aspects in two categorized lists:
+- [TODAY]: short-term aspects affecting immediate behavior
+- [CURRENT_PHASE]: slow transits defining the current psychological period
 
-You receive a pre-calculated list of aspects (current sky planets × this person's natal chart) and natal context.
-Your job: turn this data into precise behavioral analysis in 6 sections.
+Your job: turn this data into precise behavioral analysis in 2 sections.
 
-PRINCIPLES:
-- Be specific to this person's chart. Use the planets, signs, and houses mentioned.
+WRITING RULES:
+- Be specific to this person's chart. Use the exact planets, signs, and houses.
 - Describe concrete behavior and circumstances — not vague moods.
-- Prioritize: slow planets (Saturn, Jupiter, Pluto, Uranus, Neptune) carry more weight.
-- Per section, use the most relevant aspects — don't force all of them.
 - No: "energy", "vibration", "portal", "journey", "awakening", "cosmic flow".
 - No conditionals ("might be", "perhaps"). Write in present affirmative.
-- End each action with an imperative verb and something concrete, not generic.
+- Each card has EXACTLY 4 fields:
+  * evento: "[Planet] [aspect] [natal Planet]" — names only, no degrees
+  * significado: one sentence. The astrological tension or flow in psychological terms.
+  * vida_real: one sentence. How this appears in daily life — specific to the natal house and sign.
+  * orientacao: one sentence. What to do or avoid. Starts with an imperative verb.
 
 RETURN ONLY this valid JSON, no markdown, no preamble:
 
 {
-  "mais_importante": {
-    "transit_display": "Ex: Saturn ♄ Pisces 2° — square — natal Sun ☉ Sagittarius 29° House 5",
-    "title": "Short precise title of the most dominant transit",
-    "aspect": "aspect type",
-    "orb": "number",
-    "description": "3-4 sentences. What this transit is concretely doing now — to behavior, circumstances, emotions. Use the sign and natal house. No conditionals.",
-    "action": "Concrete, specific action for this week. Starts with an imperative verb."
+  "hoje": {
+    "resumo": "1 sentence describing the general tone of the day based on today's aspects.",
+    "cards": [
+      {
+        "evento": "Mercury square natal Moon",
+        "significado": "Mind and emotion in conflict — tendency to interpret words emotionally.",
+        "vida_real": "Conversations in House 3 tend to escalate quickly today.",
+        "orientacao": "Avoid making important decisions until the evening."
+      }
+    ]
   },
-  "mudancas_recentes": [
-    {
-      "transit_display": "Ex: Jupiter ♃ Cancer 18° — conjunction — natal Venus ♀ Cancer 20° House 7",
-      "title": "Title",
-      "aspect": "type",
-      "orb": "number",
-      "description": "2 sentences. What recently changed.",
-      "action": "Concrete action."
-    }
-  ],
-  "ainda_ativas": [
-    {
-      "transit_display": "string",
-      "title": "Title",
-      "aspect": "type",
-      "orb": "number",
-      "description": "2 sentences.",
-      "action": "Concrete action."
-    }
-  ],
-  "longo_prazo": [
-    {
-      "transit_display": "string",
-      "title": "Title",
-      "aspect": "type",
-      "orb": "number",
-      "description": "2-3 sentences. What is being structurally transformed over the coming months.",
-      "action": "How to work with this."
-    }
-  ],
-  "terminando": [
-    {
-      "transit_display": "string",
-      "title": "Title",
-      "aspect": "type",
-      "orb": "number",
-      "description": "1-2 sentences. What is ending.",
-      "action": "How to close this cycle."
-    }
-  ],
+  "fase_atual": {
+    "resumo": "1 sentence describing the dominant psychological process of this period.",
+    "cards": [
+      {
+        "evento": "Saturn square natal Sun",
+        "significado": "Structural pressure on identity — what was built is being tested.",
+        "vida_real": "Professional responsibilities increase while motivation oscillates in House 9.",
+        "orientacao": "Reduce the scope of projects and deliver what you already started."
+      }
+    ]
+  },
   "como_esta_vendo_a_vida": {
     "humor": "one word: expansive / contracted / accelerated / slow / intense / light / confused / focused",
-    "filtro": "2-3 sentences. This person's emotional and mental filter right now — based on dominant transits. Specific.",
-    "cuidado": "1-2 sentences. The biggest risk of reality distortion they face right now.",
+    "filtro": "2 sentences. This person's emotional filter right now — based on dominant transits.",
+    "cuidado": "1 sentence. The biggest risk of reality distortion right now.",
     "perguntas": [
-      "Clickable question 1 — specific to the most intense transit, naming the planet and house",
-      "Clickable question 2 — about emotions or relationships based on real aspects",
-      "Clickable question 3 — about work or decisions based on real aspects",
-      "Clickable question 4 — about the most challenging pattern identified in the aspects"
+      "Question specific to the most intense today transit, naming planet and house",
+      "Question about emotions or relationships based on real aspects",
+      "Question about work or decisions based on real aspects",
+      "Question about the most challenging pattern in the current phase"
     ]
   }
 }`;
 
   const userMsg = `${isPT ? 'Nome' : 'Name'}: ${name || 'User'}
 
-${isPT ? 'Aspectos calculados (trânsito × natal):' : 'Calculated aspects (transit × natal):'}
-${aspectBlock}
+${isPT ? 'ASPECTOS DE HOJE (curto prazo):' : 'TODAY ASPECTS (short-term):'}
+${hojeBlock}
 
-${natalContext ? `${isPT ? 'Contexto natal adicional:' : 'Additional natal context:'}\n${natalContext.substring(0, 2000)}` : ''}
+${isPT ? 'FASE ATUAL (trânsitos lentos):' : 'CURRENT PHASE (slow transits):'}
+${faseBlock}
+
+${natalContext ? `${isPT ? 'Contexto natal:' : 'Natal context:'}\n${natalContext.substring(0, 2000)}` : ''}
 
 ${isPT ? 'Retorne APENAS o JSON válido.' : 'Return ONLY valid JSON.'}`;
 
@@ -267,7 +254,7 @@ ${isPT ? 'Retorne APENAS o JSON válido.' : 'Return ONLY valid JSON.'}`;
       },
       body: JSON.stringify({
         model: 'claude-opus-4-5',
-        max_tokens: 4000,
+        max_tokens: 3000,
         system,
         messages: [{ role: 'user', content: userMsg }],
       }),
@@ -280,8 +267,7 @@ ${isPT ? 'Retorne APENAS o JSON válido.' : 'Return ONLY valid JSON.'}`;
     const text = data.content[0].text.replace(/```json|```/g, '').trim();
     const parsed = JSON.parse(text);
 
-    // Also return the raw aspects list so the frontend can display the aspect table
-    return res.status(200).json({ ...parsed, _aspects: aspects });
+    return res.status(200).json({ ...parsed, _aspects: rawAspects });
 
   } catch (e) {
     return res.status(500).json({ error: e.message });
