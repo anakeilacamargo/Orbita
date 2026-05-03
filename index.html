@@ -1109,14 +1109,24 @@ async function loadSky(){
   }catch(e){
     document.getElementById('transit-loading').innerHTML='<div style="color:var(--text-dim);font-size:13px;">'+(isPT?'Erro ao carregar trânsitos.':'Could not load transits.')+'</div>';
     console.error('loadSky error:',e);
+} 
+async function askTransitQuestion(question){
+  const isPT=user.lang==='pt';
+  const answerCard=document.getElementById('transit-answer-card');
+  const answerText=document.getElementById('transit-answer-text');
+  answerCard.style.display='block';
+  answerText.innerHTML='<span style="color:var(--text-dim);font-style:italic;">'+(isPT?'Analisando...':'Analyzing...')+'</span>';
+  answerCard.scrollIntoView({behavior:'smooth',block:'nearest'});
+  const sys=isPT?'Você é Orbita. Responda em 2-3 parágrafos curtos. Direto, comportamental, sem jargão. Termine com uma ação concreta que a pessoa pode tomar hoje.':'You are Orbita. Answer in 2-3 short paragraphs. Direct, behavioral, no jargon. End with a concrete action the person can take today.';
+  try{
+    const r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({system:sys+'\n\nChart:\n'+(chartContext?chartContext.substring(0,2000):''),messages:[{role:'user',content:question}],maxTokens:500})});
+    const data=await r.json();
+    answerText.innerHTML=data.text.split('\n\n').filter(p=>p.trim()).map(p=>'<p style="margin-bottom:10px;font-size:14px;line-height:1.75;">'+p+'</p>').join('');
+  }catch(e){
+    answerText.innerHTML='<p style="color:#e07070">'+e.message+'</p>';
   }
 }
-
-  try{
-    
-    document.getElementById('transit-list').innerHTML=listHtml;
-
-function initMoon(){
+  function initMoon(){
   const now=new Date();
   document.getElementById('moon-date').textContent=now.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
   const syn=29.53058867,ref=new Date('2000-01-06T18:14:00Z'),days=(now-ref)/86400000;
