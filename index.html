@@ -1161,7 +1161,15 @@ async function loadSky(){
    console.error('loadSky error:',e);
   }
 }
-async function askTransitQuestion (question){
+function toggleCollapse(collapseId,btnId){
+  const el=document.getElementById(collapseId);
+  const icon=document.getElementById(btnId+'-icon');
+  if(!el)return;
+  const open=el.style.display==='none';
+  el.style.display=open?'block':'none';
+  if(icon)icon.textContent=open?'▲':'▼';
+}
+  async function askTransitQuestion (question){
   const isPT=user.lang==='pt';
   const answerCard=document.getElementById('transit-answer-card');
   const answerText=document.getElementById('transit-answer-text');
