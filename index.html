@@ -556,7 +556,7 @@ async function loadUserProfile(){
   if(data){
     user.name=data.name||'';user.gender=data.gender||'female';user.lang=data.lang||'en';
     user.birthDate=data.birth_date||'';user.birthTime=data.birth_time||'';user.birthCity=data.birth_city||'';
-    user.birthLat=data.birth_lat||'';user.birthLng=data.birth_lng||'';user.birthNation=data.birth_nation||'';
+    user.birthLat=data.birth_lat||'';user.birthLng=data.birth_lng||'';user.birthNation=data.birth_nation||''; isPaid = data.is_paid || false;
     if(data.chart_data){
       chartRawData=data.chart_data;chartContext=data.chart_context||'';
       const planets=chartRawData.planets||[];
