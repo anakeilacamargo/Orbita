@@ -1071,13 +1071,13 @@ async function loadSky(){
       document.getElementById('sky-planets').insertAdjacentHTML('afterend','<div id="aspect-table">'+aspectHtml+'</div>');
     }
 
-    // 6. HOJE
+// 6. HOJE
     const hoje=analysis.hoje;
     if(hoje){
       document.getElementById('transit-summary').innerHTML=
         '<div style="font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin-bottom:8px;">'+(isPT?'Hoje':'Today')+'</div>'
         +'<div style="font-size:14px;color:var(--text-muted);line-height:1.65;margin-bottom:'+(hoje.cards&&hoje.cards.length?'16px':'0px')+';">'+hoje.resumo+'</div>'
-        +(hoje.cards&&hoje.cards.length ? hoje.cards.map(c=>transitCard(c,'#c9a96e')).join('') : '');
+        +(hoje.cards&&hoje.cards.length?hoje.cards.map(c=>transitCard(c,'#c9a96e')).join(''):'');
     }
 
     // 7. FASE ATUAL
@@ -1090,7 +1090,7 @@ async function loadSky(){
         +fase.cards.map(c=>transitCard(c,'#a89bd4')).join('');
     }
 
-    // 8. COMO ESTÁ VENDO A VIDA
+    // 8. ESTADO ATUAL
     const vida=analysis.como_esta_vendo_a_vida;
     if(vida){
       document.getElementById('transit-answer-card').style.display='block';
@@ -1101,6 +1101,56 @@ async function loadSky(){
         +'<div style="font-size:12px;color:#e07070;padding:8px 10px;background:rgba(224,112,96,0.06);border-radius:8px;border-left:2px solid #e07070;margin-bottom:16px;">⚠ '+vida.cuidado+'</div>'
         +'<div style="font-size:11px;color:var(--text-dim);margin-bottom:8px;letter-spacing:0.1em;text-transform:uppercase;">'+(isPT?'Perguntas':'Questions')+'</div>'
         +(vida.perguntas||[]).map(q=>'<button onclick="askTransitQuestion('+JSON.stringify(q)+')" style="text-align:left;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-family:var(--font-sans);font-size:13px;color:var(--text-muted);cursor:pointer;width:100%;margin-bottom:6px;">'+q+'</button>').join('');
+    }
+
+    // 9. TRÂNSITOS ATIVOS (colapsável)
+    const transitListEl=document.getElementById('transit-list');
+    if(transitListEl&&transitListEl.innerHTML.trim()){
+      const listLabel=isPT?'Ver trânsitos ativos':'See active transits';
+      const collapseId='collapse-transit-list';
+      const btnId='btn-transit-list';
+      const wrapper=document.createElement('div');
+      wrapper.className='moon-card';
+      wrapper.style.padding='0';
+      wrapper.innerHTML=
+        '<button id="'+btnId+'" onclick="toggleCollapse(\''+collapseId+'\',\''+btnId+'\')" style="width:100%;background:none;border:none;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;font-family:var(--font-sans);font-size:14px;color:var(--text-muted);">'
+        +'<span>'+listLabel+'</span>'
+        +'<span id="'+btnId+'-icon" style="font-size:11px;color:var(--text-dim);">▼</span>'
+        +'</button>'
+        +'<div id="'+collapseId+'" style="display:none;padding:0 20px 16px;">'
+        +transitListEl.outerHTML
+        +'</div>';
+      transitListEl.replaceWith(wrapper);
+      document.getElementById('transit-list-title').style.display='none';
+    }
+
+    // 10. DETALHES TÉCNICOS (planetas + aspectos, colapsável)
+    const skyPlanetsEl=document.getElementById('sky-planets');
+    const aspectTableEl=document.getElementById('aspect-table');
+    if(skyPlanetsEl){
+      const techLabel=isPT?'Ver detalhes técnicos':'See technical details';
+      const collapseId='collapse-tech';
+      const btnId='btn-tech';
+      const techContent=
+        '<div style="font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:var(--text-dim);margin-bottom:8px;">'+(isPT?'Planetas hoje':'Planets today')+'</div>'
+        +skyPlanetsEl.innerHTML
+        +(aspectTableEl?'<div style="margin-top:16px;">'+aspectTableEl.innerHTML+'</div>':'');
+      const wrapper=document.createElement('div');
+      wrapper.className='moon-card';
+      wrapper.style.padding='0';
+      wrapper.innerHTML=
+        '<button id="'+btnId+'" onclick="toggleCollapse(\''+collapseId+'\',\''+btnId+'\')" style="width:100%;background:none;border:none;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;font-family:var(--font-sans);font-size:14px;color:var(--text-muted);">'
+        +'<span>'+techLabel+'</span>'
+        +'<span id="'+btnId+'-icon" style="font-size:11px;color:var(--text-dim);">▼</span>'
+        +'</button>'
+        +'<div id="'+collapseId+'" style="display:none;padding:0 20px 16px;">'
+        +techContent
+        +'</div>';
+      // substituir o card que contém sky-planets
+      const skyCard=skyPlanetsEl.closest('.moon-card');
+      if(skyCard)skyCard.replaceWith(wrapper);
+      if(aspectTableEl)aspectTableEl.remove();
+      document.getElementById('sky-planets-title').style.display='none';
     }
 
     document.getElementById('transit-loading').style.display='none';
