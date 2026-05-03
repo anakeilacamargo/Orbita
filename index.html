@@ -1219,13 +1219,7 @@ async function loadSky(){
 
     document.getElementById('transit-loading').style.display='none';
     document.getElementById('transit-content').style.display='block';
-
-  }catch(e){
-    document.getElementById('transit-loading').innerHTML='<div style="color:var(--text-dim);font-size:13px;">'+(isPT?'Erro ao carregar trânsitos.':'Could not load transits.')+'</div>';
-    console.error('loadSky error:',e);
-  }
-}
-async function askTransitQuestion(question){
+(question){
   const isPT=user.lang==='pt';
   const answerCard=document.getElementById('transit-answer-card');
   const answerText=document.getElementById('transit-answer-text');
