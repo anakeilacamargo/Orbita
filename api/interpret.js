@@ -6,6 +6,9 @@ export default async function handler(req, res) {
 
   const { system, userMessage, maxTokens } = req.body;
   if (!system || !userMessage) return res.status(400).json({ error: 'Missing system or userMessage' });
+  if (typeof system !== 'string' || typeof userMessage !== 'string') {
+    return res.status(400).json({ error: 'system and userMessage must be strings' });
+  }
 
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -17,7 +20,7 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({ 
         temperature: 0,
-       model: 'claude-sonnet-4-20250514',
+        model: 'claude-sonnet-4-20250514',
         max_tokens: maxTokens || 2000,
         system,
         messages: [{ role: 'user', content: userMessage }],

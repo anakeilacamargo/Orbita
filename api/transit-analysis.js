@@ -59,6 +59,10 @@ export default async function handler(req, res) {
   if (!skyPlanets || !natalPlanets) {
     return res.status(400).json({ error: 'Missing skyPlanets or natalPlanets' });
   }
+  
+  if (!Array.isArray(skyPlanets) || !Array.isArray(natalPlanets)) {
+    return res.status(400).json({ error: 'skyPlanets and natalPlanets must be arrays' });
+  }
 
   const isPT = lang === 'pt';
 
@@ -94,7 +98,7 @@ export default async function handler(req, res) {
   const rx  = p => p.retrograde ? ' Rx' : '';
   const fmt = a => {
     const houseStr = a.natal.house ? ` Casa ${a.natal.house}` : '';
-    return `${a.transit.name}${rx(a.transit)} ${a.transit.sign} ${a.transit.degree?.toFixed(1)}° — ${a.aspect} (orbe ${a.orb}°) — natal ${a.natal.name} ${a.natal.sign} ${a.natal.degree?.toFixed(1)}°${houseStr} [${a.speed}|score:${a.score}]`;
+    return `${a.transit.name}${rx(a.transit)} ${a.transit.sign} ${a.transit.degree?.toFixed(1) || '?'}° — ${a.aspect} (orbe ${a.orb}°) — natal ${a.natal.name} ${a.natal.sign} ${a.natal.degree?.toFixed(1) || '?'}°${houseStr}`;
   };
 
   const aspectBlock = sorted.length
@@ -236,7 +240,7 @@ ${isPT ? 'Retorne APENAS o JSON válido.' : 'Return ONLY valid JSON.'}`;
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-opus-4-5',
+        model: 'claude-sonnet-4-20250514',
         max_tokens: 2000,
         system,
         messages: [{ role: 'user', content: userMsg }],
