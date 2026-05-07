@@ -554,7 +554,7 @@ async function signOut(){await sb.auth.signOut();currentUser=null;showPage('page
     showPage('page-paywall');
     return;
   }
-  
+  }
   // Perfil existe — carrega dados
   user.name=data.name||'';user.gender=data.gender||'female';user.lang=data.lang||'en';
   user.birthDate=data.birth_date||'';user.birthTime=data.birth_time||'';user.birthCity=data.birth_city||'';
@@ -822,7 +822,6 @@ function renderChartTab(placements,lang){
   html+='<div style="padding:20px;text-align:center;"><a href="/terms.html" target="_blank" style="font-size:12px;color:var(--text-dim);text-decoration:none;">Terms \xb7 Privacy \xb7 Disclaimer</a></div>';
   wrap.innerHTML=html;
 }
-
 function renderReadingTab(placements,lang){
   const wrap=document.getElementById('reading-wrap');
   const isPT=lang==='pt';
