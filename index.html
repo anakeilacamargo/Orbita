@@ -546,8 +546,8 @@ async function initAuth(){
     else if(event==='SIGNED_OUT'){currentUser=null;}
   });
 }
-async function signInWithGoogle(){await sb.auth.signInWithOAuth({provider:'google',options:{redirectTo:window.location.href}});}
-async function signInWithFacebook(){await sb.auth.signInWithOAuth({provider:'facebook',options:{redirectTo:window.location.href}});}
+async function signInWithGoogle() { await sb.auth.signInWithOAuth({  provider: 'google', options: {  redirectTo: 'https://orbita-pi.vercel.app' } }); }
+async function signInWithFacebook() { await sb.auth.signInWithOAuth({  provider: 'facebook', options: { redirectTo: 'https://orbita-pi.vercel.app' } }); }
 async function signOut(){await sb.auth.signOut();currentUser=null;showPage('page-onboard');}
 
 async function loadUserProfile(){
