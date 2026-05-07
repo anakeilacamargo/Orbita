@@ -534,6 +534,7 @@ const SUPABASE_URL='https://zdeppuzjxxtrpihaijex.supabase.co';
 const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpkZXBwdXpqeHh0cnBpaGFpamV4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyMDY5MjUsImV4cCI6MjA5MTc4MjkyNX0.MUDlLFl19K3zqn65mh8DZPHztJlZGoib3FHvrEfafok';
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 let currentUser=null;
+
 async function initAuth(){
   const{data:{session}}=await sb.auth.getSession();
   if(session?.user){currentUser=session.user;await loadUserProfile();}
@@ -543,19 +544,40 @@ async function initAuth(){
     else if(event==='SIGNED_OUT'){currentUser=null;}
   });
 }
-async function signInWithGoogle() { await sb.auth.signInWithOAuth({  provider: 'google', options: {  redirectTo: 'https://orbita-pi.vercel.app' } }); }
-async function signOut(){await sb.auth.signOut();currentUser=null;showPage('page-onboard');}
-  async function loadUserProfile(){
+
+async function signInWithGoogle(){
+  await sb.auth.signInWithOAuth({provider:'google',options:{redirectTo:'https://orbita-pi.vercel.app'}});
+}
+
+async function signOut(){
+  await sb.auth.signOut();currentUser=null;showPage('page-onboard');
+}
+
+async function loadUserProfile(){
   if(!currentUser)return;
   const{data,error}=await sb.from('profiles').select('*').eq('id',currentUser.id).maybeSingle();
-  
   if(!data){
-    // Primeiro login — cria perfil e vai para paywall
     await sb.from('profiles').insert({id:currentUser.id});
     showPage('page-paywall');
     return;
   }
+  user.name=data.name||'';user.gender=data.gender||'female';user.lang=data.lang||'en';
+  user.birthDate=data.birth_date||'';user.birthTime=data.birth_time||'';user.birthCity=data.birth_city||'';
+  user.birthLat=data.birth_lat||'';user.birthLng=data.birth_lng||'';user.birthNation=data.birth_nation||'';
+  isPaid=data.is_paid||false;
+  if(data.chart_data){
+    chartRawData=data.chart_data;chartContext=data.chart_context||'';
+    const planets=chartRawData.planets||[];
+    const fp=n=>planets.find(p=>p.name?.toLowerCase()===n.toLowerCase());
+    const sun=fp('Sun'),moon=fp('Moon'),asc=fp('Ascendant');
+    const placements={sun:sun?sun.sign:'--',sunDeg:sun?fmtDeg(sun.abs_pos):'',moon:moon?moon.sign:'--',moonDeg:moon?fmtDeg(moon.abs_pos):'',asc:asc?asc.sign:'--',ascDeg:asc?fmtDeg(asc.abs_pos):''};
+    showPage('page-app');initMoon();renderChartTab(placements,user.lang);
+    document.getElementById('state-loading').style.display='none';
+    document.getElementById('state-results').style.display='block';
+    initMoonNatal(moon,planets);loadReading(placements,user.lang);initAITab();return;
   }
+  showPage('page-paywall');
+}
   // Perfil existe — carrega dados
   user.name=data.name||'';user.gender=data.gender||'female';user.lang=data.lang||'en';
   user.birthDate=data.birth_date||'';user.birthTime=data.birth_time||'';user.birthCity=data.birth_city||'';
@@ -592,7 +614,7 @@ async function signOut(){await sb.auth.signOut();currentUser=null;showPage('page
     }
     showPage('page-paywall');
 }
-
+  }
 async function saveUserProfile(chartData,chartCtx){
   if(!currentUser)return;
   await sb.from('profiles').upsert({id:currentUser.id,name:user.name,gender:user.gender,lang:user.lang,birth_date:user.birthDate,birth_time:user.birthTime,birth_city:user.birthCity,birth_lat:user.birthLat,birth_lng:user.birthLng,birth_nation:user.birthNation,chart_data:chartData,chart_context:chartCtx});
