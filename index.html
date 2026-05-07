@@ -584,9 +584,12 @@ async function loadUserProfile(){
     initMoonNatal(moon,planets);loadReading(placements,user.lang);initAITab();return;
   }
   // Has account but no chart yet — go to paywall
-  showPage('page-paywall');
+if(data.birth_date){
+    showPage('page-paywall');
+  } else {
+    showPage('page-onboard');
+  }
 }
-
 async function saveUserProfile(chartData,chartCtx){
   if(!currentUser)return;
   await sb.from('profiles').upsert({id:currentUser.id,name:user.name,gender:user.gender,lang:user.lang,birth_date:user.birthDate,birth_time:user.birthTime,birth_city:user.birthCity,birth_lat:user.birthLat,birth_lng:user.birthLng,birth_nation:user.birthNation,chart_data:chartData,chart_context:chartCtx});
