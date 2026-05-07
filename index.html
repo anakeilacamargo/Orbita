@@ -1005,8 +1005,7 @@ async function loadSky(){
 
   const sN=s=>isPT?(SIGN_PT[s]||s):s;
   const pN=n=>isPT?(NAME_PT[n]||n):n;
-
-  // Renderiza um card no formato 4 linhas
+ // Renderiza um card no formato 4 linhas
   function transitCard(card,accentColor){
     return '<div style="margin-bottom:12px;background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;">'
       +'<div style="padding:12px 14px 10px;border-bottom:1px solid var(--border);">'
@@ -1027,7 +1026,6 @@ async function loadSky(){
       +'</div>'
       +'</div>';
   }
-
   try{
     // 1. Buscar planetas do céu atual
     const skyResp=await fetch('/api/sky');
@@ -1047,7 +1045,6 @@ async function loadSky(){
       }
       document.getElementById('sky-planets').innerHTML=html;
     }
-
     // 3. Planetas natais
     const natalPlanets=(chartRawData?.planets||[])
       .filter(p=>p.abs_pos!=null)
@@ -1057,7 +1054,6 @@ async function loadSky(){
         degree:parseFloat((p.abs_pos%30).toFixed(2)),
         house:p.house||null,
       }));
-
     // 4. Chamar transit-analysis
     const analysisResp=await fetch('/api/transit-analysis',{
       method:'POST',
@@ -1085,7 +1081,6 @@ async function loadSky(){
       }
       document.getElementById('sky-planets').insertAdjacentHTML('afterend','<div id="aspect-table">'+aspectHtml+'</div>');
     }
-
 // 6. HOJE
     const hoje=analysis.hoje;
     if(hoje){
@@ -1094,7 +1089,6 @@ async function loadSky(){
         +'<div style="font-size:14px;color:var(--text-muted);line-height:1.65;margin-bottom:'+(hoje.cards&&hoje.cards.length?'16px':'0px')+';">'+hoje.resumo+'</div>'
         +(hoje.cards&&hoje.cards.length?hoje.cards.map(c=>transitCard(c,'#c9a96e')).join(''):'');
     }
-
     // 7. FASE ATUAL
     const fase=analysis.fase_atual;
     if(fase&&fase.cards&&fase.cards.length){
@@ -1169,14 +1163,12 @@ if (listTitleEl) listTitleEl.style.display = 'none';
      const skyTitleEl = document.getElementById('sky-planets-title');
 if (skyTitleEl) skyTitleEl.style.display = 'none';
     }
-
     document.getElementById('transit-loading').style.display='none';
     document.getElementById('transit-content').style.display='block';
-
-  }catch(e){
+  }
+  catch(e){
     document.getElementById('transit-loading').innerHTML='<div style="color:var(--text-dim);font-size:13px;">'+(isPT?'Erro ao carregar trânsitos.':'Could not load transits.')+'</div>';
    console.error('loadSky error:',e);
-
 }
 function toggleCollapse(collapseId,btnId){
   const el=document.getElementById(collapseId);
@@ -1239,6 +1231,7 @@ window.addEventListener('load', function(){
   initAuth();
   initDates();
 });
+}
 </script>
 </body>
 </html>
