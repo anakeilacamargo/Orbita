@@ -542,7 +542,6 @@ async function initAuth(){
     if(event==='SIGNED_IN'&&session?.user){currentUser=session.user;await loadUserProfile();}
     else if(event==='SIGNED_OUT'){currentUser=null;}
   });
-}
 async function signInWithGoogle() { await sb.auth.signInWithOAuth({  provider: 'google', options: {  redirectTo: 'https://orbita-pi.vercel.app' } }); }
 async function signOut(){await sb.auth.signOut();currentUser=null;showPage('page-onboard');}
   async function loadUserProfile(){
@@ -614,21 +613,21 @@ let aiHistory=[];
 function showPage(id){document.querySelectorAll('.page').forEach(p=>{p.classList.remove('active');});const el=document.getElementById(id);el.style.display='block';requestAnimationFrame(()=>el.classList.add('active'));}
 
 // ONBOARDING
-function goSlide(n){document.querySelectorAll('.ob-slide').forEach(s=>s.classList.remove('active'));document.getElementById('slide-'+n).classList.add('active');}
+function goSlide(n){
+  document.querySelectorAll('.ob-slide').forEach(s=>s.classList.remove('active'));
+  document.getElementById('slide-'+n).classList.add('active');}
 function selectGender(g){user.gender=g;document.getElementById('opt-f').classList.toggle('selected',g==='female');document.getElementById('opt-m').classList.toggle('selected',g==='male');document.getElementById('btn-s2').disabled=false;}
 function selectLang(l){user.lang=l;document.getElementById('opt-en').classList.toggle('selected',l==='en');document.getElementById('opt-pt').classList.toggle('selected',l==='pt');document.getElementById('btn-s3').disabled=false;}
 
-(function initDates(){
+  function initDates(){
   const d=document.getElementById('ob-day'),y=document.getElementById('ob-year');
   for(let i=1;i<=31;i++){const o=document.createElement('option');o.value=i;o.textContent=i;d.appendChild(o);}
   for(let i=2010;i>=1940;i--){const o=document.createElement('option');o.value=i;o.textContent=i;y.appendChild(o);}
-})();
-
+}
 function checkDate(){
   const m=document.getElementById('ob-month').value,d=document.getElementById('ob-day').value,y=document.getElementById('ob-year').value;
   document.getElementById('btn-s4').disabled=!(m&&d&&y);
 }
-
 let obACTimer=null;
 async function obCityAC(val){
   const box=document.getElementById('ob-city-sugg');
