@@ -547,7 +547,7 @@ async function signInWithGoogle() { await sb.auth.signInWithOAuth({  provider: '
 async function signOut(){await sb.auth.signOut();currentUser=null;showPage('page-onboard');}
   async function loadUserProfile(){
   if(!currentUser)return;
-  const{data,error}=await sb.from('profiles').select('*').eq('id',currentUser.id).single();
+  const{data,error}=await sb.from('profiles').select('*').eq('id',currentUser.id).maybeSingle();
   
   if(!data){
     // Primeiro login — cria perfil e vai para paywall
