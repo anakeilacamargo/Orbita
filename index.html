@@ -462,7 +462,6 @@ select.ob-input option{background:#1a1b22;}
     <div class="tab-bar">
       <button class="tab-item active" id="tb-chart" onclick="switchTab('chart')"><span class="tab-icon">&#10022;</span><span class="tab-label">Chart</span></button>
       <button class="tab-item" id="tb-reading" onclick="switchTab('reading')"><span class="tab-icon">&#9678;</span><span class="tab-label">Reading</span></button>
-      <button class="tab-item" id="tb-moon" onclick="switchTab('moon')"><span class="tab-icon">&#9789;</span><span class="tab-label">Moon</span></button>
       <button class="tab-item" id="tb-sky" onclick="switchTab('sky')"><span class="tab-icon">&#9642;</span><span class="tab-label">Tr&#226;nsitos</span></button>
     </div>
   </div>
@@ -578,10 +577,10 @@ async function loadUserProfile(){
     const fp=n=>planets.find(p=>p.name?.toLowerCase()===n.toLowerCase());
     const sun=fp('Sun'),moon=fp('Moon'),asc=fp('Ascendant');
     const placements={sun:sun?sun.sign:'--',sunDeg:sun?fmtDeg(sun.abs_pos):'',moon:moon?moon.sign:'--',moonDeg:moon?fmtDeg(moon.abs_pos):'',asc:asc?asc.sign:'--',ascDeg:asc?fmtDeg(asc.abs_pos):''};
-    showPage('page-app');initMoon();renderChartTab(placements,user.lang);
+    showPage('page-app');renderChartTab(placements,user.lang);
     document.getElementById('state-loading').style.display='none';
     document.getElementById('state-results').style.display='block';
-    initMoonNatal(moon,planets);loadReading(placements,user.lang);initAITab();return;
+   loadReading(placements,user.lang);initAITab();return;
   }
   // Has account but no chart yet — go to paywall
 if(data.birth_date){
@@ -680,15 +679,15 @@ function goPay(){
   window.open(links[selectedPlan],'_blank');
 }
 function enterApp(){
-  showPage('page-app');initMoon();initAITab();setTimeout(showReview,45000);
+  showPage('page-app');initAITab();setTimeout(showReview,45000);
 }
 function launchApp(){
-  showPage('page-app');initMoon();initAITab();generateChart();
+  showPage('page-app'); initAITab();generateChart();
 }
 
 function debugSkipAPI(){
   user={name:'Ana',gender:'female',lang:'pt',birthDate:'2004-12-25',birthTime:'14:26',birthCity:'Sao Paulo, Brazil',birthLat:'-23.5505',birthLng:'-46.6333',birthNation:'BR'};
-  showPage('page-app');initMoon();
+  showPage('page-app');
   const mockPlacements={sun:'Cap',sunDeg:"4\xb014'",moon:'Gem',moonDeg:"23\xb057'",asc:'Ari',ascDeg:"22\xb015'"};
   chartRawData={planets:[
     {name:'Sun',sign:'Cap',abs_pos:274.23,house:'Ninth_House',retrograde:false},
@@ -716,7 +715,7 @@ function debugSkipAPI(){
 
 // TABS
 function switchTab(tab){
-  ['chart','reading','moon','sky'].forEach(t=>{
+  ['chart','reading','sky'].forEach(t=>{
     const tabEl=document.getElementById('tab-'+t);
     const btnEl=document.getElementById('tb-'+t);
     if(tabEl)tabEl.classList.toggle('active',t===tab);
@@ -757,7 +756,7 @@ async function generateChart(){
     renderChartTab(placements,user.lang);
     document.getElementById('state-loading').style.display='none';
     document.getElementById('state-results').style.display='block';
-    initMoonNatal(moon,planets);initAITab();
+   initAITab();
     loadReading(placements,user.lang);
   }catch(e){
     document.getElementById('state-loading').style.display='none';
@@ -1047,31 +1046,46 @@ async function loadSky(){
       document.getElementById('sky-planets').insertAdjacentHTML('afterend','<div id="aspect-table">'+aspectHtml+'</div>');
     }
 
-    const hoje=analysis.hoje;
-    if(hoje){
-      document.getElementById('transit-summary').innerHTML=
-        '<div style="font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin-bottom:8px;">'+(isPT?'Hoje':'Today')+'</div>'
-        +'<div style="font-size:14px;color:var(--text-muted);line-height:1.65;margin-bottom:'+(hoje.cards&&hoje.cards.length?'16px':'0px')+';">'+hoje.resumo+'</div>'
-        +(hoje.cards&&hoje.cards.length?hoje.cards.map(c=>transitCard(c,'#c9a96e')).join(''):'');
+  // Renderizar áreas da vida com os campos corretos da API
+    const AREAS_CONFIG = [
+      { key: 'panorama_geral', label: isPT ? 'Panorama geral' : 'Overview',       color: '#c9a96e' },
+      { key: 'amor',           label: isPT ? 'Amor'           : 'Love',            color: '#d47fa6' },
+      { key: 'carreira',       label: isPT ? 'Carreira'       : 'Career',          color: '#7fb5c9' },
+      { key: 'dinheiro',       label: isPT ? 'Dinheiro'       : 'Money',           color: '#8fbf8a' },
+      { key: 'vitalidade',     label: isPT ? 'Vitalidade'     : 'Vitality',        color: '#e07060' },
+      { key: 'familia',        label: isPT ? 'Família'        : 'Family',          color: '#a89bd4' },
+      { key: 'vida_social',    label: isPT ? 'Vida social'    : 'Social life',     color: '#7fb5c9' },
+    ];
+
+    const panorama = analysis.panorama_geral;
+    if (panorama) {
+      document.getElementById('transit-summary').innerHTML =
+        '<div style="font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin-bottom:8px;">' + (isPT ? 'Hoje' : 'Today') + '</div>'
+        + '<div style="font-size:15px;color:var(--text);line-height:1.7;margin-bottom:8px;">' + (panorama.resumo || '') + '</div>'
+        + '<div style="font-size:13px;color:var(--gold);border-left:2px solid var(--gold);padding-left:10px;margin-top:8px;">\u2192 ' + (panorama.orientacao || '') + '</div>';
     }
-    const fase=analysis.fase_atual;
-    if(fase&&fase.cards&&fase.cards.length){
-      document.getElementById('transit-questions-card').style.display='block';
-      document.getElementById('transit-questions-title').textContent=isPT?'Fase atual':'Current phase';
-      document.getElementById('transit-questions').innerHTML=
-        '<div style="font-size:13px;color:var(--text-muted);line-height:1.65;margin-bottom:16px;">'+fase.resumo+'</div>'
-        +fase.cards.map(c=>transitCard(c,'#a89bd4')).join('');
+
+    let areasHtml = '';
+    for (const area of AREAS_CONFIG.slice(1)) { // skip panorama_geral, já renderizado acima
+      const data = analysis[area.key];
+      if (!data || !data.resumo) continue;
+      const hasNoInfo = data.resumo.toLowerCase().includes('sem influência') || data.resumo.toLowerCase().includes('no significant');
+      if (hasNoInfo) continue;
+      areasHtml +=
+        '<div style="margin-bottom:12px;background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;">'
+        + '<div style="padding:10px 14px 8px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;">'
+        + '<span style="font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:' + area.color + ';">' + area.label + '</span>'
+        + '</div>'
+        + '<div style="padding:12px 14px;display:flex;flex-direction:column;gap:8px;">'
+        + '<div style="font-size:14px;color:var(--text-muted);line-height:1.65;">' + data.resumo + '</div>'
+        + '<div style="font-size:13px;color:' + area.color + ';border-left:2px solid ' + area.color + ';padding-left:10px;">\u2192 ' + (data.orientacao || '') + '</div>'
+        + '</div></div>';
     }
-    const vida=analysis.como_esta_vendo_a_vida;
-    if(vida){
-      document.getElementById('transit-answer-card').style.display='block';
-      document.getElementById('transit-answer-text').innerHTML=
-        '<div style="font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-dim);margin-bottom:10px;">'+(isPT?'Estado atual':'Current state')+'</div>'
-        +'<div style="font-size:22px;font-weight:300;color:var(--gold);margin-bottom:8px;">'+vida.humor+'</div>'
-        +'<div style="font-size:13px;color:var(--text-muted);line-height:1.7;margin-bottom:10px;">'+vida.filtro+'</div>'
-        +'<div style="font-size:12px;color:#e07070;padding:8px 10px;background:rgba(224,112,96,0.06);border-radius:8px;border-left:2px solid #e07070;margin-bottom:16px;">\u26a0 '+vida.cuidado+'</div>'
-        +'<div style="font-size:11px;color:var(--text-dim);margin-bottom:8px;letter-spacing:0.1em;text-transform:uppercase;">'+(isPT?'Perguntas':'Questions')+'</div>'
-        +(vida.perguntas||[]).map(q=>'<button onclick="askTransitQuestion('+JSON.stringify(q)+')" style="text-align:left;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-family:var(--font-sans);font-size:13px;color:var(--text-muted);cursor:pointer;width:100%;margin-bottom:6px;">'+q+'</button>').join('');
+
+    if (areasHtml) {
+      document.getElementById('transit-questions-card').style.display = 'block';
+      document.getElementById('transit-questions-title').textContent = isPT ? 'Áreas da vida' : 'Life areas';
+      document.getElementById('transit-questions').innerHTML = areasHtml;
     }
 
     const transitListEl=document.getElementById('transit-list');
@@ -1136,32 +1150,6 @@ async function askTransitQuestion(question){
   }catch(e){
     answerText.innerHTML='<p style="color:#e07070">'+e.message+'</p>';
   }
-}
-
-function initMoon(){
-  const now=new Date();
-  document.getElementById('moon-date').textContent=now.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
-  const syn=29.53058867,ref=new Date('2000-01-06T18:14:00Z'),days=(now-ref)/86400000;
-  const phase=((days%syn)+syn)%syn,frac=phase/syn;
-  let icon='\ud83c\udf11',pname='New Moon';
-  if(frac<0.03||frac>0.97){icon='\ud83c\udf11';pname='New Moon';}
-  else if(frac<0.22){icon='\ud83c\udf12';pname='Waxing Crescent';}
-  else if(frac<0.28){icon='\ud83c\udf13';pname='First Quarter';}
-  else if(frac<0.47){icon='\ud83c\udf14';pname='Waxing Gibbous';}
-  else if(frac<0.53){icon='\ud83c\udf15';pname='Full Moon';}
-  else if(frac<0.72){icon='\ud83c\udf16';pname='Waning Gibbous';}
-  else if(frac<0.78){icon='\ud83c\udf17';pname='Last Quarter';}
-  else{icon='\ud83c\udf18';pname='Waning Crescent';}
-  document.getElementById('moon-icon').textContent=icon;
-  document.getElementById('moon-phase').textContent=pname;
-  const signs=['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
-  const msign=signs[Math.floor((days%27.3)/27.3*12)%12];
-  document.getElementById('moon-sign-title').textContent='Moon in '+msign;
-  const texts={Aries:'High energy, strong impulses. Good for starting what you\'ve been postponing.',Taurus:'Slow and deliberate. The body asks for comfort and rest.',Gemini:'Mental agitation, need for communication. Good for writing and connecting ideas.',Cancer:'Emotional sensitivity heightened. Good for introspection.',Leo:'Need for recognition and warmth. Good for visibility and creativity.',Virgo:'Detail-oriented. Good for organizing and practical tasks.',Libra:'Need for harmony. Good for negotiations and restoring relationships.',Scorpio:'Intensity under the surface. Desire for truth. Avoid superficiality.',Sagittarius:'Restless, expansive. Good for learning and philosophical conversations.',Capricorn:'Ambition focused. Good for work and long-term planning.',Aquarius:'Detachment from emotions, emphasis on ideas. Good for innovation.',Pisces:'Empathy and sensitivity at peak. Creative and intuitive.'};
-  document.getElementById('moon-sign-text').textContent=texts[msign]||'';
-  const phases=[{name:'New Moon',frac:0,icon:'\ud83c\udf11'},{name:'First Quarter',frac:0.25,icon:'\ud83c\udf13'},{name:'Full Moon',frac:0.5,icon:'\ud83c\udf15'},{name:'Last Quarter',frac:0.75,icon:'\ud83c\udf17'}];
-  const upcoming=phases.map(p=>{let dd=((p.frac-frac+1)%1)*syn;if(dd<0.5)dd+=syn;const dt=new Date(now.getTime()+dd*86400000);return{...p,date:dt.toLocaleDateString('en-US',{month:'short',day:'numeric'})};});
-  document.getElementById('moon-phases').innerHTML=upcoming.map(p=>'<div class="phase-item"><div class="phase-icon">'+p.icon+'</div><div class="phase-name">'+p.name.split(' ').join('\n')+'</div><div class="phase-date">'+p.date+'</div></div>').join('');
 }
 // REVIEW
 function showReview(){document.getElementById('review-modal').classList.add('visible');}
