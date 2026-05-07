@@ -591,7 +591,6 @@ async function signOut(){await sb.auth.signOut();currentUser=null;showPage('page
       initMoonNatal(moon,planets);loadReading(placements,user.lang);initAITab();return;
     }
     showPage('page-paywall');
-  }
 }
 
 async function saveUserProfile(chartData,chartCtx){
@@ -1179,7 +1178,7 @@ if (skyTitleEl) skyTitleEl.style.display = 'none';
   }catch(e){
     document.getElementById('transit-loading').innerHTML='<div style="color:var(--text-dim);font-size:13px;">'+(isPT?'Erro ao carregar trânsitos.':'Could not load transits.')+'</div>';
    console.error('loadSky error:',e);
-  }
+
 }
 function toggleCollapse(collapseId,btnId){
   const el=document.getElementById(collapseId);
