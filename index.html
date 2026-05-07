@@ -973,38 +973,6 @@ async function sendAI(){
 
 function appendAI(role,html){const msgs=document.getElementById('ai-messages');const wrap=document.createElement('div');wrap.className='ai-msg '+role;const bubble=document.createElement('div');bubble.className='ai-bubble';bubble.innerHTML=html;wrap.appendChild(bubble);msgs.appendChild(wrap);scrollAI();return bubble;}
 function scrollAI(){const m=document.getElementById('ai-messages');setTimeout(()=>m.scrollTop=m.scrollHeight,50);}
-
-// MOON
-function initMoonNatal(moon,planets){
-  if(!moon)return;
-  const card=document.getElementById('natal-moon-card');
-  const loadingCard=document.getElementById('natal-moon-loading');
-  const title=document.getElementById('natal-moon-title');
-  const text=document.getElementById('natal-moon-text');
-  if(!card||!text)return;
-  const lang=user.lang,isPT=lang==='pt';
-  const SIGN_FULL={Cap:'Capric\xf3rnio',Can:'C\xe2ncer',Gem:'G\xeameos',Sag:'Sagit\xe1rio',Lib:'Libra',Sco:'Escorpi\xe3o',Ari:'\xc1ries',Tau:'Touro',Leo:'Le\xe3o',Vir:'Virgem',Aqu:'Aqu\xe1rio',Pis:'Peixes'};
-  const moonSign=SIGN_FULL[moon.sign]||moon.sign;
-  const hN={'First_House':'1','Second_House':'2','Third_House':'3','Fourth_House':'4','Fifth_House':'5','Sixth_House':'6','Seventh_House':'7','Eighth_House':'8','Ninth_House':'9','Tenth_House':'10','Eleventh_House':'11','Twelfth_House':'12'};
-  const moonHouse=hN[moon.house]||'';
-  const aspects=chartRawData?.aspects||[];
-  const moonAspects=aspects.filter(a=>(a.p1_name==='Moon'||a.p2_name==='Moon')&&Math.abs(a.orbit||99)<=6);
-  const aspStr=moonAspects.map(a=>{const other=a.p1_name==='Moon'?a.p2_name:a.p1_name;return a.aspect+' '+other;}).slice(0,3).join(', ');
-  if(title)title.textContent=isPT?'\u263d Lua em '+moonSign+', Casa '+moonHouse:'\u263d Moon in '+moonSign+', House '+moonHouse;
-  if(loadingCard)loadingCard.style.display='block';
-  card.style.display='none';
-  const sys=isPT?'Voc\xea \xe9 Orbita. Interprete a Lua natal desta pessoa em 3 par\xe1grafos curtos e diretos. Foque em: (1) o que ela precisa emocionalmente para se sentir segura, (2) como ela processa emo\xe7\xf5es, (3) o que termina seus relacionamentos sem ela perceber. Sem jarg\xe3o, sem linguagem m\xedstica. Comportamental e espec\xedfico.':'You are Orbita. Interpret this person\'s natal Moon in 3 short direct paragraphs. Focus on: (1) what they emotionally need to feel safe, (2) how they process emotions, (3) what ends their relationships without them realizing. No jargon, no mystical language. Behavioral and specific.';
-  const msg='Moon: '+moon.sign+', House '+moonHouse+'\nKey aspects: '+(aspStr||'none')+'\nChart: '+chartContext.substring(0,1500);
-  fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({system:sys,messages:[{role:'user',content:msg}],maxTokens:500})})
-    .then(r=>r.json())
-    .then(d=>{
-      if(loadingCard)loadingCard.style.display='none';
-      text.innerHTML=d.text.split('\n\n').filter(p=>p.trim()).map(p=>'<p style="margin-bottom:12px;font-size:14px;line-height:1.75;color:var(--text-muted)">'+p+'</p>').join('');
-      card.style.display='block';
-    })
-    .catch(()=>{if(loadingCard)loadingCard.style.display='none';});
-}
-
 let skyLoaded=false;
 async function loadSky(){
   if(skyLoaded)return;
