@@ -534,11 +534,11 @@ const SUPABASE_URL='https://zdeppuzjxxtrpihaijex.supabase.co';
 const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpkZXBwdXpqeHh0cnBpaGFpamV4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyMDY5MjUsImV4cCI6MjA5MTc4MjkyNX0.MUDlLFl19K3zqn65mh8DZPHztJlZGoib3FHvrEfafok';
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 let currentUser=null;
-
 async function initAuth(){
   const{data:{session}}=await sb.auth.getSession();
   if(session?.user){currentUser=session.user;await loadUserProfile();}
   sb.auth.onAuthStateChange(async(event,session)=>{
+    console.log('Auth event:',event,session?.user?.email);
     if(event==='SIGNED_IN'&&session?.user){currentUser=session.user;await loadUserProfile();}
     else if(event==='SIGNED_OUT'){currentUser=null;}
   });
