@@ -582,7 +582,7 @@ let chartRawData=null;
 let aiHistory=[];
 
 // PAGES
-function showPage(id){document.querySelectorAll('.page').forEach(p=>{p.classList.remove('active');});const el=document.getElementById(id);el.style.display='block';requestAnimationFrame(()=>el.classList.add('active'));}
+function showPage(id){   document.querySelectorAll('.page').forEach(p=>{     p.classList.remove('active');     p.style.display = 'none';   // ← ESSA LINHA RESOLVE TUDO   });   const el = document.getElementById(id);   el.style.display = 'block';   requestAnimationFrame(()=>el.classList.add('active')); }
 
 // ONBOARDING
 function goSlide(n){
