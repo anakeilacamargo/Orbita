@@ -1,0 +1,35 @@
+name: Check JS Syntax
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      - run: npm install -g acorn
+      - run: |
+          node -e "
+            const fs = require('fs');
+            const acorn = require('acorn');
+            const html = fs.readFileSync('index.html', 'utf8');
+            const match = html.match(/<script>([\s\S]*?)<\/script>/g);
+            if (!match) { console.log('No scripts found'); process.exit(0); }
+            match.forEach((block, i) => {
+              const js = block.replace(/<\/?script>/g, '');
+              try {
+                acorn.parse(js, {ecmaVersion: 2020});
+                console.log('Script block ' + (i+1) + ': OK');
+              } catch(e) {
+                console.error('Script block ' + (i+1) + ' ERROR:', e.message);
+                process.exit(1);
+              }
+            });
+          "
