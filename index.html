@@ -1234,8 +1234,18 @@ Structure — each section has:
 `;
 }
 function buildUserMessage(placements,lang){
-  const isPT=lang==='pt';
-  return (isPT?'Nome':'Name')+': '+user.name+'\n'+(isPT?'Genero':'Gender')+': '+(user.gender==='female'?(isPT?'Mulher':'Woman'):(isPT?'Homem':'Man'))+'\n'+(isPT?'Data':'Date')+': '+user.birthDate+'\n'+(isPT?'Hora':'Time')+': '+(user.birthTime||'unknown')+'\n'+(isPT?'Cidade':'City')+': '+user.birthCity+'\n'+(isPT?'Sol':'Sun')+': '+placements.sun+' '+placements.sunDeg+' | '+(isPT?'Lua':'Moon')+': '+placements.moon+' '+placements.moonDeg+' | '+(isPT?'Ascendente':'Rising')+': '+placements.asc+' '+placements.ascDeg+'\n\n'+(isPT?'Dados completos do mapa (Swiss Ephemeris):':'Full chart data (Swiss Ephemeris):')+'\n'+chartContext.substring(0,3000)+'\n\n'+(isPT?'Retorne APENAS o JSON valido.':'Return ONLY valid JSON.');
+  const isPT = lang === 'pt';
+  return (isPT?'Nome':'Name')+': '+user.name+'\n'
+    +(isPT?'Genero':'Gender')+': '+(user.gender==='female'?(isPT?'Mulher':'Woman'):(isPT?'Homem':'Man'))+'\n'
+    +(isPT?'Data':'Date')+': '+user.birthDate+'\n'
+    +(isPT?'Hora':'Time')+': '+(user.birthTime||'unknown')+'\n'
+    +(isPT?'Cidade':'City')+': '+user.birthCity+'\n'
+    +(isPT?'Sol':'Sun')+': '+placements.sun+' '+placements.sunDeg
+    +' | '+(isPT?'Lua':'Moon')+': '+placements.moon+' '+placements.moonDeg
+    +' | '+(isPT?'Ascendente':'Rising')+': '+placements.asc+' '+placements.ascDeg+'\n\n'
+    +(isPT?'Dados completos do mapa (Swiss Ephemeris):':'Full chart data (Swiss Ephemeris):')
+    +'\n'+chartContext.substring(0,3000)
+    +'\n\n'+(isPT?'Retorne APENAS o JSON valido.':'Return ONLY valid JSON.');
 }
 window.addEventListener('load',function(){
   initAuth();
