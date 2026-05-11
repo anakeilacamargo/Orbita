@@ -1,0 +1,1 @@
+import js from "@eslint/js"; export default [js.configs.recommended, {languageOptions:{ecmaVersion:2020,globals:{window:true,document:true,fetch:true,console:true,setTimeout:true,clearTimeout:true,requestAnimationFrame:true}}}];

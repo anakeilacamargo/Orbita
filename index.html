@@ -15,7 +15,7 @@
 <style>
 :root{
   --bg:#08090d;--surface:#0f1117;--surface2:#161820;
-  --border:rgba(255,255,255,0.07);--border-hover:rgba(255,255,255,0.15);
+  --border:(255,255,255,0.07);--border-hover:rgba(255,255,255,0.15);
   --text:#f0ede8;--text-muted:#7a7880;--text-dim:#4a4850;
   --gold:#c9a96e;--gold-dim:rgba(201,169,110,0.15);--gold-glow:rgba(201,169,110,0.08);
   --safe-bottom:env(safe-area-inset-bottom,0px);
@@ -582,7 +582,7 @@ let chartRawData=null;
 let aiHistory=[];
 
 // PAGES
-function showPage(id){   document.querySelectorAll('.page').forEach(p=>{     p.classList.remove('active');     p.style.display = 'none';   // ← ESSA LINHA RESOLVE TUDO   });   const el = document.getElementById(id);   el.style.display = 'block';   requestAnimationFrame(()=>el.classList.add('active')); }
+function showPage(id){document.querySelectorAll('.page').forEach(p=>{     p.classList.remove('active');     p.style.display = 'none';   // ← ESSA LINHA RESOLVE TUDO   });   const el = document.getElementById(id);   el.style.display = 'block';   requestAnimationFrame(()=>el.classList.add('active')); }
 
 // ONBOARDING
 function goSlide(n){
@@ -794,7 +794,7 @@ function renderChartTab(placements,lang){
   }
 
   if(lunar.moon_phase_name){html+='<div style="margin:12px 20px 0;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:10px;"><span style="font-size:22px">'+(lunar.moon_emoji||'\ud83c\udf15')+'</span><div><div style="font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-dim);margin-bottom:2px">'+(isPT?'Lua no nascimento':'Birth moon')+'</div><div style="font-size:14px;color:var(--gold)">'+lunar.moon_phase_name+'</div></div></div>';}
-  if(stelliums.length){const hN={'First_House':'1','Second_House':'2','Third_House':'3','Fourth_House':'4','Fifth_House':'5','Sixth_House':'6','Seventh_House':'7','Eighth_House':'8','Ninth_House':'9','Tenth_House':'10','Eleventh_House':'11','Twelfth_House':'12'};html+='<div style="margin:12px 20px 0;background:rgba(201,169,110,0.08);border:1px solid rgba(201,169,110,0.2);border-radius:12px;padding:12px 16px;"><div style="font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin-bottom:4px">Stellium</div><div style="font-size:13px;color:var(--text-muted)">'+stelliums.map(h=>(isPT?'Casa':'House')+' '+(hN[h]||h)+': 3+ '+(isPT?'planetas':'planets')).join(' \xb7 ')+'</div></div>';}
+  if(stelliums.length){const hN={'First_House':'1','Second_House':'2','Third_House':'3','Fourth_House':'4','Fifth_House':'5','Sixth_House':'6','Seventh_House':'7','Eighth_House':'8','Ninth_House':'9','Tenth_House':'10','Eleventh_House':'11','Twelfth_House':'12'};html+='<div style="margin:12px 20px 0;background:(201,169,110,0.08);border:1px solid rgba(201,169,110,0.2);border-radius:12px;padding:12px 16px;"><div style="font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin-bottom:4px">Stellium</div><div style="font-size:13px;color:var(--text-muted)">'+stelliums.map(h=>(isPT?'Casa':'House')+' '+(hN[h]||h)+': 3+ '+(isPT?'planetas':'planets')).join(' \xb7 ')+'</div></div>';}
   html+='<div class="section-block" style="margin-top:16px;"><div class="section-header" onclick="toggleSection(\'sec-planets\')"><div class="section-icon" style="background:#a89bd418;color:#a89bd4">\u25c9</div><div class="section-title">'+(isPT?'Planetas':'Planets')+'</div><div class="section-chevron open" id="chev-planets">\u25bc</div></div><div class="section-body open" id="sec-planets">'+buildPlanetsHTML(chartRawData,isPT)+'</div></div>';
   html+='<div class="section-block"><div class="section-header" onclick="toggleSection(\'sec-aspects\')"><div class="section-icon" style="background:#d47fa618;color:#d47fa6">\u26af</div><div class="section-title">'+(isPT?'Aspectos':'Aspects')+'</div><div class="section-chevron open" id="chev-aspects">\u25bc</div></div><div class="section-body open" id="sec-aspects">'+buildAspectsHTML(chartRawData,isPT)+'</div></div>';
   if(dist.fire_percentage!==undefined){
@@ -1157,96 +1157,14 @@ function submitReview(){window.open('https://orbita-pi.vercel.app','_blank');clo
 
 // SYSTEM PROMPTS
 function buildSystemPrompt(lang){
-  const isPT = lang === 'pt';
-  const langLabel = isPT ? 'Brazilian Portuguese' : 'English';
-  return `You are Orbita, an astrology analysis engine. Write in ${langLabel}.
-
-TONE: Direct, behavioral, specific. No metaphors, no spiritual language, no conditionals.
-FORBIDDEN WORDS: journey, energy, vibe, resonate, cosmic, mystical, shadow work, portal, awakening, soul, universe, healing, sacred.
-EVERY sentence must describe observable behavior or name a specific planet/sign/house.
-Write as if describing someone to a third party — imparcial, not "you are X" but "people with this placement tend to X".
-Then shift to second person for concrete impact: "This shows up when..."
-
-Return ONLY valid JSON, no markdown, no preamble.
-
-Structure — each section has:
-- "titulo": section title
-- "subtitulo": planet + sign + house, e.g. "Sol em Capricórnio, Casa 9"  
-- "paragrafos": array of 2-4 strings, each a standalone behavioral observation
-- "aspectos_chave": 1-2 most relevant aspects affecting this planet, as short strings
-
-{
-  "identidade": {
-    "titulo": "${isPT ? 'Sua identidade' : 'Your identity'}",
-    "subtitulo": "Sol em X + Ascendente em Y",
-    "paragrafos": ["...", "...", "..."],
-    "aspectos_chave": ["Sol quadratura Saturno", "..."]
-  },
-  "temperamento": {
-    "titulo": "${isPT ? 'Seu temperamento' : 'Your temperament'}",
-    "subtitulo": "${isPT ? 'Distribuição de elementos' : 'Element distribution'}",
-    "paragrafos": ["...", "..."],
-    "aspectos_chave": []
-  },
-  "emocional": {
-    "titulo": "${isPT ? 'Seu emocional' : 'Your emotional world'}",
-    "subtitulo": "Lua em X, Casa Y",
-    "paragrafos": ["...", "...", "..."],
-    "aspectos_chave": ["Lua oposta Plutão", "..."]
-  },
-  "intelecto": {
-    "titulo": "${isPT ? 'Seu intelecto' : 'Your intellect'}",
-    "subtitulo": "Mercúrio em X, Casa Y",
-    "paragrafos": ["...", "..."],
-    "aspectos_chave": ["..."]
-  },
-  "vida_afetiva": {
-    "titulo": "${isPT ? 'Vida afetiva' : 'Affective life'}",
-    "subtitulo": "Vênus em X, Casa Y",
-    "paragrafos": ["...", "...", "..."],
-    "aspectos_chave": ["..."]
-  },
-  "forca_interior": {
-    "titulo": "${isPT ? 'Força interior' : 'Inner drive'}",
-    "subtitulo": "Marte em X, Casa Y",
-    "paragrafos": ["...", "..."],
-    "aspectos_chave": ["..."]
-  },
-  "oportunidades": {
-    "titulo": "${isPT ? 'Oportunidades' : 'Opportunities'}",
-    "subtitulo": "Júpiter em X, Casa Y",
-    "paragrafos": ["...", "..."],
-    "aspectos_chave": ["..."]
-  },
-  "desafios": {
-    "titulo": "${isPT ? 'Desafios' : 'Challenges'}",
-    "subtitulo": "Saturno em X, Casa Y",
-    "paragrafos": ["...", "...", "..."],
-    "aspectos_chave": ["..."]
-  },
-    "evolucao": {
-    "titulo": "${isPT ? 'Evolução pessoal' : 'Personal evolution'}",
-    "subtitulo": "${isPT ? 'Netuno, Urano e Plutão' : 'Neptune, Uranus and Pluto'}",
-    "paragrafos": ["...", "..."],
-    "aspectos_chave": ["..."]
-  }
-}
-`;
-}
+  const langLabel=lang==='pt'?'Brazilian Portuguese':'English';
+  return 'You are Orbita, an astrology intelligence engine specialized in natal chart analysis.\n\nYour tone is direct, precise, and slightly cold -- never vague, never preachy. You respect the user\'s intelligence. You do not soften difficult truths. You do not fabricate placements.\n\nNever use: "journey", "energy", "vibe", "resonate", "healing journey", "toxic", "red flag", "oracular", "sacred", "cosmic", "mystical", "shadow work", "portal", "awakening", "soul", "universe".\nEvery sentence must describe observable behavior or a specific planetary configuration. No metaphors. No poetic language. If it sounds like an Instagram caption, cut it.\nNever exceed 3 sentences per text field.\n\nRespond entirely in '+langLabel+'.\n\nReturn ONLY valid JSON. No markdown. No preamble.';
+} 
 function buildUserMessage(placements,lang){
-  const isPT = lang === 'pt';
-  return (isPT?'Nome':'Name')+': '+user.name+'\n'
-    +(isPT?'Genero':'Gender')+': '+(user.gender==='female'?(isPT?'Mulher':'Woman'):(isPT?'Homem':'Man'))+'\n'
-    +(isPT?'Data':'Date')+': '+user.birthDate+'\n'
-    +(isPT?'Hora':'Time')+': '+(user.birthTime||'unknown')+'\n'
-    +(isPT?'Cidade':'City')+': '+user.birthCity+'\n'
-    +(isPT?'Sol':'Sun')+': '+placements.sun+' '+placements.sunDeg
-    +' | '+(isPT?'Lua':'Moon')+': '+placements.moon+' '+placements.moonDeg
-    +' | '+(isPT?'Ascendente':'Rising')+': '+placements.asc+' '+placements.ascDeg+'\n\n'
-    +(isPT?'Dados completos do mapa (Swiss Ephemeris):':'Full chart data (Swiss Ephemeris):')
-    +'\n'+chartContext.substring(0,3000)
-    +'\n\n'+(isPT?'Retorne APENAS o JSON valido.':'Return ONLY valid JSON.');
+  const isPT=lang==='pt';
+  return (isPT?'Nome':'Name')+': '+user.name+'\n'+(isPT?'Genero':'Gender')+': '+(user.gender==='female'?(isPT?'Mulher':'Woman'):(isPT?'Homem':'Man'))+'\n'+(isPT?'Data':'Date')+': '+user.birthDate+'\n'+(isPT?'Hora':'Time')+': '+(user.birthTime||'unknown')+'\n'+(isPT?'Cidade':'City')+': '+user.birthCity+'\n'+(isPT?'Sol':'Sun')+': '+placements.sun+' '+placements.sunDeg+' | '+(isPT?'Lua':'Moon')+': '+placements.moon+' '+placements.moonDeg+' | '+(isPT?'Ascendente':'Rising')+': '+placements.asc+' '+placements.ascDeg+'\n\n'+(isPT?'Dados completos do mapa (Swiss Ephemeris):':'Full chart data (Swiss Ephemeris):')+'\n'+chartContext.substring(0,3000)+'\n\n'+(isPT?'Retorne APENAS o JSON valido.':'Return ONLY valid JSON.');
 }
+
 window.addEventListener('load',function(){
   initAuth();
   initDates();
