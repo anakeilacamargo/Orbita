@@ -15,7 +15,7 @@
 <style>
 :root{
   --bg:#08090d;--surface:#0f1117;--surface2:#161820;
-  --border:(255,255,255,0.07);--border-hover:rgba(255,255,255,0.15);
+  --border:rgba(255,255,255,0.07);--border-hover:rgba(255,255,255,0.15);
   --text:#f0ede8;--text-muted:#7a7880;--text-dim:#4a4850;
   --gold:#c9a96e;--gold-dim:rgba(201,169,110,0.15);--gold-glow:rgba(201,169,110,0.08);
   --safe-bottom:env(safe-area-inset-bottom,0px);
@@ -476,8 +476,8 @@ select.ob-input option{background:#1a1b22;}
     <button class="btn-modal-skip" onclick="closeSaveModal()">Maybe later</button>
   </div>
 </div>
-
 <script>
+let orbitaDefinitions = null;
 // SUPABASE
 const SUPABASE_URL='https://zdeppuzjxxtrpihaijex.supabase.co';
 const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpkZXBwdXpqeHh0cnBpaGFpamV4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyMDY5MjUsImV4cCI6MjA5MTc4MjkyNX0.MUDlLFl19K3zqn65mh8DZPHztJlZGoib3FHvrEfafok';
@@ -550,7 +550,7 @@ async function loadUserProfile(){
     showPage('page-app');renderChartTab(placements,user.lang);
     document.getElementById('state-loading').style.display='none';
     document.getElementById('state-results').style.display='block';
-   loadReading(placements,user.lang);initAITab();return;
+   (placements,user.lang);initAITab();return;
   }
   // Has account but no chart yet — go to paywall
 if(data.birth_date){
@@ -582,7 +582,7 @@ let chartRawData=null;
 let aiHistory=[];
 
 // PAGES
-function showPage(id){document.querySelectorAll('.page').forEach(p=>{     p.classList.remove('active');     p.style.display = 'none';   // ← ESSA LINHA RESOLVE TUDO   });   const el = document.getElementById(id);   el.style.display = 'block';   requestAnimationFrame(()=>el.classList.add('active')); }
+function showPage(id){   document.querySelectorAll('.page').forEach(p=>{     p.classList.remove('active');     p.style.display = 'none';   // ← ESSA LINHA RESOLVE TUDO   });   const el = document.getElementById(id);   el.style.display = 'block';   requestAnimationFrame(()=>el.classList.add('active')); }
 
 // ONBOARDING
 function goSlide(n){
@@ -660,21 +660,21 @@ function debugSkipAPI(){
   showPage('page-app');
   const mockPlacements={sun:'Cap',sunDeg:"4\xb014'",moon:'Gem',moonDeg:"23\xb057'",asc:'Ari',ascDeg:"22\xb015'"};
   chartRawData={planets:[
-    {name:'Sun',sign:'Cap',abs_pos:274.23,house:'Ninth_House',retrograde:false},
-    {name:'Moon',sign:'Gem',abs_pos:83.94,house:'Third_House',retrograde:false},
-    {name:'Mercury',sign:'Sag',abs_pos:252.51,house:'Eighth_House',retrograde:false},
-    {name:'Venus',sign:'Sag',abs_pos:251.20,house:'Eighth_House',retrograde:false},
-    {name:'Mars',sign:'Sag',abs_pos:240.01,house:'Eighth_House',retrograde:false},
-    {name:'Jupiter',sign:'Lib',abs_pos:196.64,house:'Sixth_House',retrograde:false},
-    {name:'Saturn',sign:'Can',abs_pos:115.41,house:'Fourth_House',retrograde:true},
-    {name:'Uranus',sign:'Pis',abs_pos:333.68,house:'Eleventh_House',retrograde:false},
-    {name:'Neptune',sign:'Aqu',abs_pos:313.64,house:'Tenth_House',retrograde:false},
-    {name:'Pluto',sign:'Sag',abs_pos:262.49,house:'Ninth_House',retrograde:false},
-    {name:'Chiron',sign:'Cap',abs_pos:295.00,house:'Tenth_House',retrograde:false},
-    {name:'True_North_Lunar_Node',sign:'Tau',abs_pos:30.12,house:'First_House',retrograde:true},
-    {name:'Mean_Lilith',sign:'Can',abs_pos:106.08,house:'Third_House',retrograde:false},
-    {name:'Ascendant',sign:'Ari',abs_pos:22.25,house:'First_House',retrograde:false},
-    {name:'Medium_Coeli',sign:'Cap',abs_pos:292.58,house:'Tenth_House',retrograde:false}
+    {name:'Sun',sign:'Cap',abs_pos:274.23,house:'Nineth',retrograde:false},
+    {name:'Moon',sign:'Gem',abs_pos:83.94,house:'Third',retrograde:false},
+    {name:'Mercury',sign:'Sag',abs_pos:252.51,house:'Eighth',retrograde:false},
+    {name:'Venus',sign:'Sag',abs_pos:251.20,house:'Eighth',retrograde:false},
+    {name:'Mars',sign:'Sag',abs_pos:240.01,house:'Eighth',retrograde:false},
+    {name:'Jupiter',sign:'Lib',abs_pos:196.64,house:'Sixth',retrograde:false},
+    {name:'Saturn',sign:'Can',abs_pos:115.41,house:'Fourth',retrograde:true},
+    {name:'Uranus',sign:'Pis',abs_pos:333.68,house:'Eleventh',retrograde:false},
+    {name:'Neptune',sign:'Aqu',abs_pos:313.64,house:'Tenth',retrograde:false},
+    {name:'Pluto',sign:'Sag',abs_pos:262.49,house:'Ninth',retrograde:false},
+    {name:'Chiron',sign:'Cap',abs_pos:295.00,house:'Tenth',retrograde:false},
+    {name:'True_North_Lunar_Node',sign:'Tau',abs_pos:30.12,house:'First',retrograde:true},
+    {name:'Mean_Lilith',sign:'Can',abs_pos:106.08,house:'Third',retrograde:false},
+    {name:'Ascendant',sign:'Ari',abs_pos:22.25,house:'First',retrograde:false},
+    {name:'Medium_Coeli',sign:'Cap',abs_pos:292.58,house:'Tenth',retrograde:false}
   ],aspects:[],element_distribution:{fire:7,earth:4.6,air:3.5,water:2,fire_percentage:41,earth_percentage:27,air_percentage:20,water_percentage:12}};
   chartContext='mock';
   renderChartTab(mockPlacements,'pt');
@@ -735,24 +735,34 @@ async function generateChart(){
   }
 }
 
-async function loadReading(placements,lang){
-  document.getElementById('reading-loading').style.display='flex';
-  document.getElementById('reading-content').style.display='none';
-  document.getElementById('reading-gate').style.display='none';
-  try{
-    const sysPrompt=buildSystemPrompt(lang);
-    const uMsg=buildUserMessage(placements,lang);
-    const interpResp=await fetch('/api/interpret',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({system:sysPrompt,userMessage:uMsg,maxTokens:3000})});
-    if(!interpResp.ok){const e=await interpResp.json();throw new Error(e.error||'Interpretation error');}
-    const interpJSON=await interpResp.json();
-    currentData=JSON.parse(interpJSON.text.replace(/```json|```/g,'').trim());
-    renderReadingTab(placements,lang);
-    document.getElementById('reading-loading').style.display='none';
-    document.getElementById('reading-content').style.display='block';
-  }catch(e){
-    document.getElementById('reading-loading').style.display='none';
-    document.getElementById('reading-content').style.display='block';
-    document.getElementById('reading-wrap').innerHTML='<div style="padding:20px;color:#e07070;font-size:14px;">Error loading reading: '+e.message+'</div>';
+async function loadReading(placements, lang) {
+  document.getElementById('reading-loading').style.display = 'flex';
+  document.getElementById('reading-content').style.display = 'none';
+  document.getElementById('reading-gate').style.display = 'none';
+  try {
+    if (!orbitaDefinitions) {
+      const defResp = await fetch('/definitions.json');
+      if (!defResp.ok) throw new Error('Could not load definitions');
+      orbitaDefinitions = await defResp.json();
+    }
+ 
+    const sysPrompt = buildSystemPrompt(lang, orbitaDefinitions);
+    const uMsg = buildUserMessage(placements, lang);
+    const interpResp = await fetch('/api/interpret', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ system: sysPrompt, userMessage: uMsg, maxTokens: 3000 })
+    });
+    if (!interpResp.ok) { const e = await interpResp.json(); throw new Error(e.error || 'Interpretation error'); }
+    const interpJSON = await interpResp.json();
+    currentData = JSON.parse(interpJSON.text.replace(/```json|```/g, '').trim());
+    renderReadingTab(placements, lang);
+    document.getElementById('reading-loading').style.display = 'none';
+    document.getElementById('reading-content').style.display = 'block';
+  } catch (e) {
+    document.getElementById('reading-loading').style.display = 'none';
+    document.getElementById('reading-content').style.display = 'block';
+    document.getElementById('reading-wrap').innerHTML = '<div style="padding:20px;color:#e07070;font-size:14px;">Error loading reading: ' + e.message + '</div>';
   }
 }
 
@@ -794,7 +804,7 @@ function renderChartTab(placements,lang){
   }
 
   if(lunar.moon_phase_name){html+='<div style="margin:12px 20px 0;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:10px;"><span style="font-size:22px">'+(lunar.moon_emoji||'\ud83c\udf15')+'</span><div><div style="font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-dim);margin-bottom:2px">'+(isPT?'Lua no nascimento':'Birth moon')+'</div><div style="font-size:14px;color:var(--gold)">'+lunar.moon_phase_name+'</div></div></div>';}
-  if(stelliums.length){const hN={'First_House':'1','Second_House':'2','Third_House':'3','Fourth_House':'4','Fifth_House':'5','Sixth_House':'6','Seventh_House':'7','Eighth_House':'8','Ninth_House':'9','Tenth_House':'10','Eleventh_House':'11','Twelfth_House':'12'};html+='<div style="margin:12px 20px 0;background:(201,169,110,0.08);border:1px solid rgba(201,169,110,0.2);border-radius:12px;padding:12px 16px;"><div style="font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin-bottom:4px">Stellium</div><div style="font-size:13px;color:var(--text-muted)">'+stelliums.map(h=>(isPT?'Casa':'House')+' '+(hN[h]||h)+': 3+ '+(isPT?'planetas':'planets')).join(' \xb7 ')+'</div></div>';}
+  if(stelliums.length){const hN={'First_House':'1','Second_House':'2','Third_House':'3','Fourth_House':'4','Fifth_House':'5','Sixth_House':'6','Seventh_House':'7','Eighth_House':'8','Ninth_House':'9','Tenth_House':'10','Eleventh_House':'11','Twelfth_House':'12'};html+='<div style="margin:12px 20px 0;background:rgba(201,169,110,0.08);border:1px solid rgba(201,169,110,0.2);border-radius:12px;padding:12px 16px;"><div style="font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin-bottom:4px">Stellium</div><div style="font-size:13px;color:var(--text-muted)">'+stelliums.map(h=>(isPT?'Casa':'House')+' '+(hN[h]||h)+': 3+ '+(isPT?'planetas':'planets')).join(' \xb7 ')+'</div></div>';}
   html+='<div class="section-block" style="margin-top:16px;"><div class="section-header" onclick="toggleSection(\'sec-planets\')"><div class="section-icon" style="background:#a89bd418;color:#a89bd4">\u25c9</div><div class="section-title">'+(isPT?'Planetas':'Planets')+'</div><div class="section-chevron open" id="chev-planets">\u25bc</div></div><div class="section-body open" id="sec-planets">'+buildPlanetsHTML(chartRawData,isPT)+'</div></div>';
   html+='<div class="section-block"><div class="section-header" onclick="toggleSection(\'sec-aspects\')"><div class="section-icon" style="background:#d47fa618;color:#d47fa6">\u26af</div><div class="section-title">'+(isPT?'Aspectos':'Aspects')+'</div><div class="section-chevron open" id="chev-aspects">\u25bc</div></div><div class="section-body open" id="sec-aspects">'+buildAspectsHTML(chartRawData,isPT)+'</div></div>';
   if(dist.fire_percentage!==undefined){
@@ -1156,15 +1166,134 @@ function rateModal(n){document.querySelectorAll('#review-modal .modal-star').for
 function submitReview(){window.open('https://orbita-pi.vercel.app','_blank');closeReview();}
 
 // SYSTEM PROMPTS
-function buildSystemPrompt(lang){
+function buildSystemPrompt(lang, definitions) {
+  const isPT = lang === 'pt';
+  const langLabel = isPT ? 'Brazilian Portuguese' : 'English';
+ 
+  // Lê direto de chartRawData.planets (variável global já existente no seu código)
+  const nameMap = {
+    'sun': 'Sol', 'moon': 'Lua', 'mercury': 'Mercúrio', 'venus': 'Vênus',
+    'mars': 'Marte', 'jupiter': 'Júpiter', 'saturn': 'Saturno',
+    'uranus': 'Urano', 'neptune': 'Netuno', 'pluto': 'Plutão',
+    'chiron': 'Quíron', 'lilith': 'Lilith',
+    'true node': 'Nodo Norte', 'north node': 'Nodo Norte',
+    'south node': 'Nodo Sul'
+  };
+ 
+  const planets = (typeof chartRawData !== 'undefined' && chartRawData?.planets) || [];
+  const planetMap = {};
+  for (const p of planets) {
+    const ptName = nameMap[p.name?.toLowerCase()];
+    if (ptName) planetMap[ptName] = { sign: p.sign, house: p.house };
+  }
+ 
+  // Monta bloco de definições relevantes para este mapa
+  let defsBlock = '=== BASE CONCEITUAL (USE PARA COMBINAR PLANETA + SIGNO + CASA) ===\n\n';
+ 
+  defsBlock += 'PLANETAS:\n';
+  for (const [planeta, pos] of Object.entries(planetMap)) {
+    const def = definitions.planetas[planeta];
+    if (def) defsBlock += `${planeta}: ${def}\n`;
+  }
+ 
+  defsBlock += '\nSIGNOS (apenas os presentes neste mapa):\n';
+  const signosUsados = [...new Set(Object.values(planetMap).map(p => p.sign).filter(Boolean))];
+  for (const signo of signosUsados) {
+    const def = definitions.signos[signo];
+    if (def) defsBlock += `${signo}: ${def}\n`;
+  }
+ 
+  defsBlock += '\nCASAS (apenas as ocupadas neste mapa):\n';
+  const casasUsadas = [...new Set(Object.values(planetMap).map(p => p.house).filter(Boolean))];
+  for (const casa of casasUsadas) {
+    const def = definitions.casas[String(casa)];
+    if (def) defsBlock += `Casa ${casa}: ${def}\n`;
+  }
+ 
+  defsBlock += '\nINSTRUÇÃO: Para cada posição planetária, combine o significado do planeta + signo + casa acima. Não use definições genéricas de astrologia. Use apenas o que está definido aqui como base conceitual.\n';
+ 
+ function buildSystemPrompt(lang){
   const langLabel=lang==='pt'?'Brazilian Portuguese':'English';
   return 'You are Orbita, an astrology intelligence engine specialized in natal chart analysis.\n\nYour tone is direct, precise, and slightly cold -- never vague, never preachy. You respect the user\'s intelligence. You do not soften difficult truths. You do not fabricate placements.\n\nNever use: "journey", "energy", "vibe", "resonate", "healing journey", "toxic", "red flag", "oracular", "sacred", "cosmic", "mystical", "shadow work", "portal", "awakening", "soul", "universe".\nEvery sentence must describe observable behavior or a specific planetary configuration. No metaphors. No poetic language. If it sounds like an Instagram caption, cut it.\nNever exceed 3 sentences per text field.\n\nRespond entirely in '+langLabel+'.\n\nReturn ONLY valid JSON. No markdown. No preamble.';
-} 
-function buildUserMessage(placements,lang){
-  const isPT=lang==='pt';
-  return (isPT?'Nome':'Name')+': '+user.name+'\n'+(isPT?'Genero':'Gender')+': '+(user.gender==='female'?(isPT?'Mulher':'Woman'):(isPT?'Homem':'Man'))+'\n'+(isPT?'Data':'Date')+': '+user.birthDate+'\n'+(isPT?'Hora':'Time')+': '+(user.birthTime||'unknown')+'\n'+(isPT?'Cidade':'City')+': '+user.birthCity+'\n'+(isPT?'Sol':'Sun')+': '+placements.sun+' '+placements.sunDeg+' | '+(isPT?'Lua':'Moon')+': '+placements.moon+' '+placements.moonDeg+' | '+(isPT?'Ascendente':'Rising')+': '+placements.asc+' '+placements.ascDeg+'\n\n'+(isPT?'Dados completos do mapa (Swiss Ephemeris):':'Full chart data (Swiss Ephemeris):')+'\n'+chartContext.substring(0,3000)+'\n\n'+(isPT?'Retorne APENAS o JSON valido.':'Return ONLY valid JSON.');
 }
-
+ 
+Structure — each section has:
+- "titulo": section title
+- "subtitulo": planet + sign + house, e.g. "Sol em Capricórnio, Casa 9"
+- "paragrafos": array of 2-4 strings, each a standalone behavioral observation
+- "aspectos_chave": 1-2 most relevant aspects affecting this planet, as short strings
+{
+  "identidade": {
+    "titulo": "${isPT ? 'Sua identidade' : 'Your identity'}",
+    "subtitulo": "Sol em X + Ascendente em Y",
+    "paragrafos": ["...", "...", "..."],
+    "aspectos_chave": ["Sol quadratura Saturno", "..."]
+  },
+  "temperamento": {
+    "titulo": "${isPT ? 'Seu temperamento' : 'Your temperament'}",
+    "subtitulo": "${isPT ? 'Distribuição de elementos' : 'Element distribution'}",
+    "paragrafos": ["...", "..."],
+    "aspectos_chave": []
+  },
+  "emocional": {
+    "titulo": "${isPT ? 'Seu emocional' : 'Your emotional world'}",
+    "subtitulo": "Lua em X, Casa Y",
+    "paragrafos": ["...", "...", "..."],
+    "aspectos_chave": ["Lua oposta Plutão", "..."]
+  }
+  "intelecto": {
+    "titulo": "${isPT ? 'Seu intelecto' : 'Your intellect'}",
+    "subtitulo": "Mercúrio em X, Casa Y",
+    "paragrafos": ["...", "..."],
+    "aspectos_chave": ["..."]
+  },
+  "vida_afetiva": {
+    "titulo": "${isPT ? 'Vida afetiva' : 'Affective life'}",
+    "subtitulo": "Vênus em X, Casa Y",
+    "paragrafos": ["...", "...", "..."],
+    "aspectos_chave": ["..."]
+  },
+  "forca_interior": {
+    "titulo": "${isPT ? 'Força interior' : 'Inner drive'}",
+    "subtitulo": "Marte em X, Casa Y",
+    "paragrafos": ["...", "..."],
+    "aspectos_chave": ["..."]
+  },
+  "oportunidades": {
+    "titulo": "${isPT ? 'Oportunidades' : 'Opportunities'}",
+    "subtitulo": "Júpiter em X, Casa Y",
+    "paragrafos": ["...", "..."],
+    "aspectos_chave": ["..."]
+  },
+  "desafios": {
+    "titulo": "${isPT ? 'Desafios' : 'Challenges'}",
+    "subtitulo": "Saturno em X, Casa Y",
+    "paragrafos": ["...", "...", "..."],
+    "aspectos_chave": ["..."]
+  },
+  "evolucao": {
+    "titulo": "${isPT ? 'Evolução pessoal' : 'Personal evolution'}",
+    "subtitulo": "${isPT ? 'Netuno, Urano e Plutão' : 'Neptune, Uranus and Pluto'}",
+    "paragrafos": ["...", "..."],
+    "aspectos_chave": ["..."]
+  }
+}
+`;
+}
+function buildUserMessage(placements,lang){
+  const isPT = lang === 'pt';
+  return (isPT?'Nome':'Name')+': '+user.name+'\n'
+    +(isPT?'Genero':'Gender')+': '+(user.gender==='female'?(isPT?'Mulher':'Woman'):(isPT?'Homem':'Man'))+'\n'
+    +(isPT?'Data':'Date')+': '+user.birthDate+'\n'
+    +(isPT?'Hora':'Time')+': '+(user.birthTime||'unknown')+'\n'
+    +(isPT?'Cidade':'City')+': '+user.birthCity+'\n'
+    +(isPT?'Sol':'Sun')+': '+placements.sun+' '+placements.sunDeg
+    +' | '+(isPT?'Lua':'Moon')+': '+placements.moon+' '+placements.moonDeg
+    +' | '+(isPT?'Ascendente':'Rising')+': '+placements.asc+' '+placements.ascDeg+'\n\n'
+    +(isPT?'Dados completos do mapa (Swiss Ephemeris):':'Full chart data (Swiss Ephemeris):')
+    +'\n'+chartContext.substring(0,3000)
+    +'\n\n'+(isPT?'Retorne APENAS o JSON valido.':'Return ONLY valid JSON.');
+}
 window.addEventListener('load',function(){
   initAuth();
   initDates();
