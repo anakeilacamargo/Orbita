@@ -544,7 +544,7 @@ async function loadSky(){
     const natalPlanets=(chartRawData?.planets||[]).filter(p=>p.abs_pos!=null).map(p=>({name:p.name,sign:p.sign,abs_pos:parseFloat(parseFloat(p.abs_pos).toFixed(4)),degree:parseFloat((p.abs_pos%30).toFixed(2)),house:p.house||null}));
     const analysisResp=await fetch('/api/transit-analysis',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({skyPlanets:skyData.planets,natalPlanets,natalContext:chartContext||'',lang:user.lang,name:user.name})});
     const analysis=await analysisResp.json();
-
+skyLoaded=true;
     if(analysis._aspects&&analysis._aspects.length){
       const ASPECT_COLOR={'conjun\xe7\xe3o':'#c9a96e','conjunction':'#c9a96e','oposi\xe7\xe3o':'#e07070','opposition':'#e07070','quadratura':'#e07070','square':'#e07070','tr\xedgono':'#8fbf8a','trine':'#8fbf8a','sextil':'#7fb5c9','sextile':'#7fb5c9'};
       const PLANET_SYMBOL={Sun:'\u2609',Moon:'\u263d',Mercury:'\u263f',Venus:'\u2640',Mars:'\u2642',Jupiter:'\u2643',Saturn:'\u2644',Uranus:'\u2645',Neptune:'\u2646',Pluto:'\u2647',True_Node:'\u260a',True_North_Lunar_Node:'\u260a',Chiron:'\u26b7'};
