@@ -1291,7 +1291,7 @@ function buildUserMessage(placements,lang){
     +' | '+(isPT?'Lua':'Moon')+': '+placements.moon+' '+placements.moonDeg
     +' | '+(isPT?'Ascendente':'Rising')+': '+placements.asc+' '+placements.ascDeg+'\n\n'
     +(isPT?'Dados completos do mapa (Swiss Ephemeris):':'Full chart data (Swiss Ephemeris):')
-    +'\n'+chartContext.substring(0,3000)
+    +'\n'+(chartContext ? chartContext.substring(0,3000) : '')+'\n\n'
     +'\n\n'+(isPT?'Retorne APENAS o JSON valido.':'Return ONLY valid JSON.');
 }
 window.addEventListener('load',function(){
