@@ -1163,8 +1163,6 @@ async function askTransitQuestion(question){
 function showReview(){document.getElementById('review-modal').classList.add('visible');}
 function closeReview(){document.getElementById('review-modal').classList.remove('visible');}
 function rateModal(n){document.querySelectorAll('#review-modal .modal-star').forEach((s,i)=>s.classList.toggle('lit',i<n));document.getElementById('modal-cta').disabled=false;}
-function submitReview(){window.open('https://orbita-pi.vercel.app','_blank');closeReview();}
-
 // SYSTEM PROMPTS
 function buildSystemPrompt(lang, definitions) {
   const isPT = lang === 'pt';
