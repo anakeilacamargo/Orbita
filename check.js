@@ -494,7 +494,6 @@ function scrollAI(){const m=document.getElementById('ai-messages');setTimeout(()
 let skyLoaded=false;
 async function loadSky(){
   if(skyLoaded)return;
-  skyLoaded=true;
   const now=new Date();
   const isPT=user.lang==='pt';
   document.getElementById('transit-title').textContent=isPT?'Tr\xe2nsitos':'Transits';
